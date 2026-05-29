@@ -1,0 +1,148 @@
+ collisions: 2031214 electrons: 55134 mean energy: 1.26e+01
+ collisions: 3003817 electrons: 75393 mean energy: 1.05e+01
+ collisions: 4023362 electrons: 88851 mean energy: 8.93e+00
+ collisions: 5037391 electrons: 105743 mean energy: 1.18e+01
+ collisions: 6054027 electrons: 124582 mean energy: 9.64e+00
+ collisions: 7056606 electrons: 133089 mean energy: 8.39e+00
+ collisions: 8077399 electrons: 146806 mean energy: 1.00e+01
+ collisions: 9009249 electrons: 170017 mean energy: 1.18e+01
+ collisions: 10090122 electrons: 197264 mean energy: 1.06e+01
+ collisions: 11088594 electrons: 208805 mean energy: 8.63e+00
+ collisions: 12050202 electrons: 213686 mean energy: 8.00e+00
+ collisions: 1067263 electrons: 230997 mean energy: 8.67e+00
+collisions: 2081109 electrons: 241895 E: 9.142e+00 eV w_bulk: 2.787e+05 m/s w_flux: 1.987e+05 m/s DN_bulk: 2.79e+24 (ms)^-1 DN_flux: 2.50e+24 (ms)^-1 Reff_count: 2.77e-15 m^3/s Reff_calc: 2.16e-15 m^3/s
+collisions: 3093214 electrons: 249123 E: 8.805e+00 eV w_bulk: 2.687e+05 m/s w_flux: 1.905e+05 m/s DN_bulk: 2.71e+24 (ms)^-1 DN_flux: 2.47e+24 (ms)^-1 Reff_count: 2.70e-15 m^3/s Reff_calc: 1.74e-15 m^3/s
+collisions: 4017261 electrons: 258335 E: 8.866e+00 eV w_bulk: 2.612e+05 m/s w_flux: 2.073e+05 m/s DN_bulk: 2.76e+24 (ms)^-1 DN_flux: 2.95e+24 (ms)^-1 Reff_count: 2.61e-15 m^3/s Reff_calc: 1.84e-15 m^3/s
+collisions: 5131124 electrons: 267797 E: 8.856e+00 eV w_bulk: 2.575e+05 m/s w_flux: 1.932e+05 m/s DN_bulk: 2.76e+24 (ms)^-1 DN_flux: 2.72e+24 (ms)^-1 Reff_count: 2.56e-15 m^3/s Reff_calc: 1.80e-15 m^3/s
+collisions: 6122722 electrons: 276979 E: 8.856e+00 eV w_bulk: 2.536e+05 m/s w_flux: 1.953e+05 m/s DN_bulk: 2.69e+24 (ms)^-1 DN_flux: 2.80e+24 (ms)^-1 Reff_count: 2.52e-15 m^3/s Reff_calc: 1.81e-15 m^3/s
+collisions: 7120882 electrons: 284268 E: 8.820e+00 eV w_bulk: 2.500e+05 m/s w_flux: 1.911e+05 m/s DN_bulk: 2.64e+24 (ms)^-1 DN_flux: 2.70e+24 (ms)^-1 Reff_count: 2.49e-15 m^3/s Reff_calc: 1.75e-15 m^3/s
+collisions: 8186608 electrons: 301044 E: 9.016e+00 eV w_bulk: 2.559e+05 m/s w_flux: 2.537e+05 m/s DN_bulk: 2.70e+24 (ms)^-1 DN_flux: 2.98e+24 (ms)^-1 Reff_count: 2.46e-15 m^3/s Reff_calc: 1.97e-15 m^3/s
+collisions: 9085904 electrons: 340543 E: 9.698e+00 eV w_bulk: 2.877e+05 m/s w_flux: 3.006e+05 m/s DN_bulk: 3.11e+24 (ms)^-1 DN_flux: 3.45e+24 (ms)^-1 Reff_count: 2.47e-15 m^3/s Reff_calc: 2.81e-15 m^3/s
+collisions: 10074661 electrons: 375916 E: 1.004e+01 eV w_bulk: 3.211e+05 m/s w_flux: 2.982e+05 m/s DN_bulk: 3.59e+24 (ms)^-1 DN_flux: 3.66e+24 (ms)^-1 Reff_count: 2.50e-15 m^3/s Reff_calc: 3.37e-15 m^3/s
+collisions: 11084871 electrons: 397352 E: 1.007e+01 eV w_bulk: 3.404e+05 m/s w_flux: 2.883e+05 m/s DN_bulk: 3.87e+24 (ms)^-1 DN_flux: 3.69e+24 (ms)^-1 Reff_count: 2.54e-15 m^3/s Reff_calc: 3.49e-15 m^3/s
+collisions: 12188099 electrons: 428993 E: 1.017e+01 eV w_bulk: 3.565e+05 m/s w_flux: 3.029e+05 m/s DN_bulk: 4.09e+24 (ms)^-1 DN_flux: 3.84e+24 (ms)^-1 Reff_count: 2.57e-15 m^3/s Reff_calc: 3.77e-15 m^3/s
+collisions: 13069503 electrons: 452572 E: 1.023e+01 eV w_bulk: 3.660e+05 m/s w_flux: 3.042e+05 m/s DN_bulk: 4.23e+24 (ms)^-1 DN_flux: 3.90e+24 (ms)^-1 Reff_count: 2.60e-15 m^3/s Reff_calc: 3.93e-15 m^3/s
+collisions: 14226581 electrons: 469614 E: 1.020e+01 eV w_bulk: 3.744e+05 m/s w_flux: 2.970e+05 m/s DN_bulk: 4.34e+24 (ms)^-1 DN_flux: 3.77e+24 (ms)^-1 Reff_count: 2.64e-15 m^3/s Reff_calc: 3.85e-15 m^3/s
+collisions: 15093645 electrons: 479794 E: 1.015e+01 eV w_bulk: 3.781e+05 m/s w_flux: 2.941e+05 m/s DN_bulk: 4.39e+24 (ms)^-1 DN_flux: 3.72e+24 (ms)^-1 Reff_count: 2.67e-15 m^3/s Reff_calc: 3.76e-15 m^3/s
+collisions: 16253431 electrons: 491422 E: 1.009e+01 eV w_bulk: 3.809e+05 m/s w_flux: 2.886e+05 m/s DN_bulk: 4.42e+24 (ms)^-1 DN_flux: 3.63e+24 (ms)^-1 Reff_count: 2.70e-15 m^3/s Reff_calc: 3.61e-15 m^3/s
+collisions: 17124447 electrons: 498337 E: 1.003e+01 eV w_bulk: 3.817e+05 m/s w_flux: 2.839e+05 m/s DN_bulk: 4.43e+24 (ms)^-1 DN_flux: 3.58e+24 (ms)^-1 Reff_count: 2.72e-15 m^3/s Reff_calc: 3.49e-15 m^3/s
+collisions: 18004250 electrons: 505069 E: 9.951e+00 eV w_bulk: 3.816e+05 m/s w_flux: 2.789e+05 m/s DN_bulk: 4.43e+24 (ms)^-1 DN_flux: 3.55e+24 (ms)^-1 Reff_count: 2.74e-15 m^3/s Reff_calc: 3.38e-15 m^3/s
+collisions: 19174632 electrons: 511846 E: 9.914e+00 eV w_bulk: 3.808e+05 m/s w_flux: 2.747e+05 m/s DN_bulk: 4.41e+24 (ms)^-1 DN_flux: 3.44e+24 (ms)^-1 Reff_count: 2.77e-15 m^3/s Reff_calc: 3.22e-15 m^3/s
+collisions: 20083846 electrons: 519324 E: 9.815e+00 eV w_bulk: 3.797e+05 m/s w_flux: 2.740e+05 m/s DN_bulk: 4.39e+24 (ms)^-1 DN_flux: 3.46e+24 (ms)^-1 Reff_count: 2.78e-15 m^3/s Reff_calc: 3.14e-15 m^3/s
+collisions: 21099528 electrons: 537604 E: 9.802e+00 eV w_bulk: 3.785e+05 m/s w_flux: 2.837e+05 m/s DN_bulk: 4.37e+24 (ms)^-1 DN_flux: 3.57e+24 (ms)^-1 Reff_count: 2.79e-15 m^3/s Reff_calc: 3.18e-15 m^3/s
+collisions: 22229663 electrons: 570355 E: 9.898e+00 eV w_bulk: 3.785e+05 m/s w_flux: 2.898e+05 m/s DN_bulk: 4.36e+24 (ms)^-1 DN_flux: 3.64e+24 (ms)^-1 Reff_count: 2.81e-15 m^3/s Reff_calc: 3.34e-15 m^3/s
+collisions: 23369927 electrons: 593666 E: 9.923e+00 eV w_bulk: 3.786e+05 m/s w_flux: 2.876e+05 m/s DN_bulk: 4.35e+24 (ms)^-1 DN_flux: 3.60e+24 (ms)^-1 Reff_count: 2.82e-15 m^3/s Reff_calc: 3.40e-15 m^3/s
+collisions: 24166996 electrons: 613777 E: 9.957e+00 eV w_bulk: 3.788e+05 m/s w_flux: 2.924e+05 m/s DN_bulk: 4.35e+24 (ms)^-1 DN_flux: 3.70e+24 (ms)^-1 Reff_count: 2.83e-15 m^3/s Reff_calc: 3.47e-15 m^3/s
+collisions: 25010855 electrons: 639456 E: 1.003e+01 eV w_bulk: 3.792e+05 m/s w_flux: 3.006e+05 m/s DN_bulk: 4.36e+24 (ms)^-1 DN_flux: 3.79e+24 (ms)^-1 Reff_count: 2.83e-15 m^3/s Reff_calc: 3.58e-15 m^3/s
+collisions: 26324613 electrons: 672632 E: 1.006e+01 eV w_bulk: 3.802e+05 m/s w_flux: 2.966e+05 m/s DN_bulk: 4.37e+24 (ms)^-1 DN_flux: 3.75e+24 (ms)^-1 Reff_count: 2.85e-15 m^3/s Reff_calc: 3.69e-15 m^3/s
+collisions: 27195797 electrons: 688256 E: 1.006e+01 eV w_bulk: 3.808e+05 m/s w_flux: 2.950e+05 m/s DN_bulk: 4.38e+24 (ms)^-1 DN_flux: 3.75e+24 (ms)^-1 Reff_count: 2.86e-15 m^3/s Reff_calc: 3.69e-15 m^3/s
+collisions: 28071343 electrons: 702225 E: 1.005e+01 eV w_bulk: 3.813e+05 m/s w_flux: 2.927e+05 m/s DN_bulk: 4.38e+24 (ms)^-1 DN_flux: 3.73e+24 (ms)^-1 Reff_count: 2.86e-15 m^3/s Reff_calc: 3.68e-15 m^3/s
+collisions: 29072531 electrons: 742626 E: 1.013e+01 eV w_bulk: 3.826e+05 m/s w_flux: 3.121e+05 m/s DN_bulk: 4.40e+24 (ms)^-1 DN_flux: 3.84e+24 (ms)^-1 Reff_count: 2.87e-15 m^3/s Reff_calc: 3.87e-15 m^3/s
+collisions: 30078198 electrons: 768961 E: 1.015e+01 eV w_bulk: 3.839e+05 m/s w_flux: 3.089e+05 m/s DN_bulk: 4.41e+24 (ms)^-1 DN_flux: 3.82e+24 (ms)^-1 Reff_count: 2.88e-15 m^3/s Reff_calc: 3.93e-15 m^3/s
+collisions: 31077811 electrons: 787160 E: 1.015e+01 eV w_bulk: 3.851e+05 m/s w_flux: 3.068e+05 m/s DN_bulk: 4.42e+24 (ms)^-1 DN_flux: 3.77e+24 (ms)^-1 Reff_count: 2.89e-15 m^3/s Reff_calc: 3.93e-15 m^3/s
+collisions: 32083310 electrons: 803233 E: 1.013e+01 eV w_bulk: 3.859e+05 m/s w_flux: 3.039e+05 m/s DN_bulk: 4.43e+24 (ms)^-1 DN_flux: 3.79e+24 (ms)^-1 Reff_count: 2.90e-15 m^3/s Reff_calc: 3.91e-15 m^3/s
+collisions: 33128689 electrons: 823165 E: 1.012e+01 eV w_bulk: 3.866e+05 m/s w_flux: 3.034e+05 m/s DN_bulk: 4.43e+24 (ms)^-1 DN_flux: 3.83e+24 (ms)^-1 Reff_count: 2.91e-15 m^3/s Reff_calc: 3.92e-15 m^3/s
+collisions: 34249406 electrons: 852356 E: 1.015e+01 eV w_bulk: 3.873e+05 m/s w_flux: 3.063e+05 m/s DN_bulk: 4.44e+24 (ms)^-1 DN_flux: 3.87e+24 (ms)^-1 Reff_count: 2.92e-15 m^3/s Reff_calc: 3.98e-15 m^3/s
+collisions: 35360333 electrons: 871994 E: 1.015e+01 eV w_bulk: 3.880e+05 m/s w_flux: 3.029e+05 m/s DN_bulk: 4.45e+24 (ms)^-1 DN_flux: 3.84e+24 (ms)^-1 Reff_count: 2.93e-15 m^3/s Reff_calc: 3.97e-15 m^3/s
+collisions: 36463443 electrons: 886456 E: 1.014e+01 eV w_bulk: 3.885e+05 m/s w_flux: 3.009e+05 m/s DN_bulk: 4.45e+24 (ms)^-1 DN_flux: 3.80e+24 (ms)^-1 Reff_count: 2.93e-15 m^3/s Reff_calc: 3.94e-15 m^3/s
+collisions: 37017639 electrons: 893799 E: 1.013e+01 eV w_bulk: 3.886e+05 m/s w_flux: 2.989e+05 m/s DN_bulk: 4.45e+24 (ms)^-1 DN_flux: 3.81e+24 (ms)^-1 Reff_count: 2.94e-15 m^3/s Reff_calc: 3.92e-15 m^3/s
+collisions: 38147391 electrons: 909438 E: 1.010e+01 eV w_bulk: 3.888e+05 m/s w_flux: 2.959e+05 m/s DN_bulk: 4.45e+24 (ms)^-1 DN_flux: 3.83e+24 (ms)^-1 Reff_count: 2.95e-15 m^3/s Reff_calc: 3.89e-15 m^3/s
+collisions: 39303563 electrons: 925766 E: 1.009e+01 eV w_bulk: 3.888e+05 m/s w_flux: 2.937e+05 m/s DN_bulk: 4.45e+24 (ms)^-1 DN_flux: 3.83e+24 (ms)^-1 Reff_count: 2.95e-15 m^3/s Reff_calc: 3.86e-15 m^3/s
+collisions: 40459907 electrons: 939152 E: 1.007e+01 eV w_bulk: 3.886e+05 m/s w_flux: 2.903e+05 m/s DN_bulk: 4.44e+24 (ms)^-1 DN_flux: 3.81e+24 (ms)^-1 Reff_count: 2.96e-15 m^3/s Reff_calc: 3.82e-15 m^3/s
+collisions: 41033574 electrons: 944548 E: 1.006e+01 eV w_bulk: 3.885e+05 m/s w_flux: 2.898e+05 m/s DN_bulk: 4.44e+24 (ms)^-1 DN_flux: 3.79e+24 (ms)^-1 Reff_count: 2.96e-15 m^3/s Reff_calc: 3.79e-15 m^3/s
+collisions: 42167903 electrons: 953160 E: 1.005e+01 eV w_bulk: 3.883e+05 m/s w_flux: 2.879e+05 m/s DN_bulk: 4.43e+24 (ms)^-1 DN_flux: 3.75e+24 (ms)^-1 Reff_count: 2.97e-15 m^3/s Reff_calc: 3.72e-15 m^3/s
+collisions: 43284430 electrons: 959380 E: 1.005e+01 eV w_bulk: 3.880e+05 m/s w_flux: 2.867e+05 m/s DN_bulk: 4.43e+24 (ms)^-1 DN_flux: 3.70e+24 (ms)^-1 Reff_count: 2.98e-15 m^3/s Reff_calc: 3.65e-15 m^3/s
+collisions: 44382111 electrons: 964122 E: 1.003e+01 eV w_bulk: 3.878e+05 m/s w_flux: 2.852e+05 m/s DN_bulk: 4.42e+24 (ms)^-1 DN_flux: 3.66e+24 (ms)^-1 Reff_count: 2.98e-15 m^3/s Reff_calc: 3.57e-15 m^3/s
+collisions: 45469907 electrons: 967977 E: 1.001e+01 eV w_bulk: 3.874e+05 m/s w_flux: 2.830e+05 m/s DN_bulk: 4.42e+24 (ms)^-1 DN_flux: 3.63e+24 (ms)^-1 Reff_count: 2.99e-15 m^3/s Reff_calc: 3.49e-15 m^3/s
+collisions: 46051162 electrons: 973889 E: 9.953e+00 eV w_bulk: 3.872e+05 m/s w_flux: 2.849e+05 m/s DN_bulk: 4.41e+24 (ms)^-1 DN_flux: 3.65e+24 (ms)^-1 Reff_count: 2.99e-15 m^3/s Reff_calc: 3.47e-15 m^3/s
+collisions: 47223594 electrons: 986162 E: 9.925e+00 eV w_bulk: 3.868e+05 m/s w_flux: 2.844e+05 m/s DN_bulk: 4.41e+24 (ms)^-1 DN_flux: 3.65e+24 (ms)^-1 Reff_count: 3.00e-15 m^3/s Reff_calc: 3.43e-15 m^3/s
+collisions: 48418240 electrons: 998296 E: 9.912e+00 eV w_bulk: 3.863e+05 m/s w_flux: 2.824e+05 m/s DN_bulk: 4.40e+24 (ms)^-1 DN_flux: 3.63e+24 (ms)^-1 Reff_count: 3.00e-15 m^3/s Reff_calc: 3.39e-15 m^3/s
+collisions: 49009562 electrons: 1003178 E: 9.907e+00 eV w_bulk: 3.861e+05 m/s w_flux: 2.816e+05 m/s DN_bulk: 4.39e+24 (ms)^-1 DN_flux: 3.62e+24 (ms)^-1 Reff_count: 3.01e-15 m^3/s Reff_calc: 3.37e-15 m^3/s
+collisions: 50322720 electrons: 1030666 E: 9.887e+00 eV w_bulk: 3.856e+05 m/s w_flux: 2.899e+05 m/s DN_bulk: 4.39e+24 (ms)^-1 DN_flux: 3.69e+24 (ms)^-1 Reff_count: 3.01e-15 m^3/s Reff_calc: 3.40e-15 m^3/s
+collisions: 51009341 electrons: 1045790 E: 9.897e+00 eV w_bulk: 3.854e+05 m/s w_flux: 2.891e+05 m/s DN_bulk: 4.38e+24 (ms)^-1 DN_flux: 3.69e+24 (ms)^-1 Reff_count: 3.01e-15 m^3/s Reff_calc: 3.42e-15 m^3/s
+collisions: 52378428 electrons: 1069544 E: 9.901e+00 eV w_bulk: 3.851e+05 m/s w_flux: 2.865e+05 m/s DN_bulk: 4.38e+24 (ms)^-1 DN_flux: 3.67e+24 (ms)^-1 Reff_count: 3.02e-15 m^3/s Reff_calc: 3.43e-15 m^3/s
+collisions: 53064485 electrons: 1079444 E: 9.899e+00 eV w_bulk: 3.848e+05 m/s w_flux: 2.850e+05 m/s DN_bulk: 4.37e+24 (ms)^-1 DN_flux: 3.67e+24 (ms)^-1 Reff_count: 3.02e-15 m^3/s Reff_calc: 3.42e-15 m^3/s
+collisions: 54424668 electrons: 1095484 E: 9.893e+00 eV w_bulk: 3.844e+05 m/s w_flux: 2.824e+05 m/s DN_bulk: 4.36e+24 (ms)^-1 DN_flux: 3.65e+24 (ms)^-1 Reff_count: 3.02e-15 m^3/s Reff_calc: 3.40e-15 m^3/s
+collisions: 55099784 electrons: 1101978 E: 9.887e+00 eV w_bulk: 3.841e+05 m/s w_flux: 2.811e+05 m/s DN_bulk: 4.36e+24 (ms)^-1 DN_flux: 3.64e+24 (ms)^-1 Reff_count: 3.03e-15 m^3/s Reff_calc: 3.38e-15 m^3/s
+collisions: 56485614 electrons: 1119505 E: 9.863e+00 eV w_bulk: 3.835e+05 m/s w_flux: 2.794e+05 m/s DN_bulk: 4.35e+24 (ms)^-1 DN_flux: 3.66e+24 (ms)^-1 Reff_count: 3.03e-15 m^3/s Reff_calc: 3.36e-15 m^3/s
+collisions: 57178810 electrons: 1127139 E: 9.859e+00 eV w_bulk: 3.832e+05 m/s w_flux: 2.783e+05 m/s DN_bulk: 4.34e+24 (ms)^-1 DN_flux: 3.65e+24 (ms)^-1 Reff_count: 3.03e-15 m^3/s Reff_calc: 3.35e-15 m^3/s
+collisions: 58562281 electrons: 1140310 E: 9.841e+00 eV w_bulk: 3.826e+05 m/s w_flux: 2.757e+05 m/s DN_bulk: 4.33e+24 (ms)^-1 DN_flux: 3.64e+24 (ms)^-1 Reff_count: 3.04e-15 m^3/s Reff_calc: 3.31e-15 m^3/s
+collisions: 59254647 electrons: 1146406 E: 9.835e+00 eV w_bulk: 3.822e+05 m/s w_flux: 2.746e+05 m/s DN_bulk: 4.33e+24 (ms)^-1 DN_flux: 3.63e+24 (ms)^-1 Reff_count: 3.04e-15 m^3/s Reff_calc: 3.29e-15 m^3/s
+collisions: 60649789 electrons: 1158971 E: 9.809e+00 eV w_bulk: 3.815e+05 m/s w_flux: 2.722e+05 m/s DN_bulk: 4.32e+24 (ms)^-1 DN_flux: 3.63e+24 (ms)^-1 Reff_count: 3.04e-15 m^3/s Reff_calc: 3.26e-15 m^3/s
+collisions: 61396891 electrons: 1172062 E: 9.795e+00 eV w_bulk: 3.811e+05 m/s w_flux: 2.756e+05 m/s DN_bulk: 4.31e+24 (ms)^-1 DN_flux: 3.66e+24 (ms)^-1 Reff_count: 3.04e-15 m^3/s Reff_calc: 3.26e-15 m^3/s
+collisions: 62142380 electrons: 1183299 E: 9.795e+00 eV w_bulk: 3.807e+05 m/s w_flux: 2.749e+05 m/s DN_bulk: 4.31e+24 (ms)^-1 DN_flux: 3.65e+24 (ms)^-1 Reff_count: 3.04e-15 m^3/s Reff_calc: 3.26e-15 m^3/s
+collisions: 63669653 electrons: 1208539 E: 9.793e+00 eV w_bulk: 3.799e+05 m/s w_flux: 2.752e+05 m/s DN_bulk: 4.29e+24 (ms)^-1 DN_flux: 3.67e+24 (ms)^-1 Reff_count: 3.05e-15 m^3/s Reff_calc: 3.27e-15 m^3/s
+collisions: 64459413 electrons: 1223240 E: 9.798e+00 eV w_bulk: 3.796e+05 m/s w_flux: 2.748e+05 m/s DN_bulk: 4.29e+24 (ms)^-1 DN_flux: 3.68e+24 (ms)^-1 Reff_count: 3.05e-15 m^3/s Reff_calc: 3.28e-15 m^3/s
+collisions: 65245572 electrons: 1235482 E: 9.799e+00 eV w_bulk: 3.792e+05 m/s w_flux: 2.739e+05 m/s DN_bulk: 4.28e+24 (ms)^-1 DN_flux: 3.67e+24 (ms)^-1 Reff_count: 3.05e-15 m^3/s Reff_calc: 3.28e-15 m^3/s
+collisions: 66048591 electrons: 1250199 E: 9.801e+00 eV w_bulk: 3.788e+05 m/s w_flux: 2.740e+05 m/s DN_bulk: 4.28e+24 (ms)^-1 DN_flux: 3.69e+24 (ms)^-1 Reff_count: 3.05e-15 m^3/s Reff_calc: 3.29e-15 m^3/s
+collisions: 67665681 electrons: 1276100 E: 9.804e+00 eV w_bulk: 3.780e+05 m/s w_flux: 2.733e+05 m/s DN_bulk: 4.27e+24 (ms)^-1 DN_flux: 3.68e+24 (ms)^-1 Reff_count: 3.05e-15 m^3/s Reff_calc: 3.29e-15 m^3/s
+collisions: 68467882 electrons: 1286635 E: 9.801e+00 eV w_bulk: 3.777e+05 m/s w_flux: 2.719e+05 m/s DN_bulk: 4.26e+24 (ms)^-1 DN_flux: 3.67e+24 (ms)^-1 Reff_count: 3.05e-15 m^3/s Reff_calc: 3.29e-15 m^3/s
+collisions: 69260704 electrons: 1295271 E: 9.801e+00 eV w_bulk: 3.773e+05 m/s w_flux: 2.717e+05 m/s DN_bulk: 4.26e+24 (ms)^-1 DN_flux: 3.65e+24 (ms)^-1 Reff_count: 3.06e-15 m^3/s Reff_calc: 3.27e-15 m^3/s
+collisions: 70048366 electrons: 1302548 E: 9.798e+00 eV w_bulk: 3.770e+05 m/s w_flux: 2.709e+05 m/s DN_bulk: 4.25e+24 (ms)^-1 DN_flux: 3.64e+24 (ms)^-1 Reff_count: 3.06e-15 m^3/s Reff_calc: 3.26e-15 m^3/s
+collisions: 71692557 electrons: 1326432 E: 9.776e+00 eV w_bulk: 3.762e+05 m/s w_flux: 2.712e+05 m/s DN_bulk: 4.24e+24 (ms)^-1 DN_flux: 3.67e+24 (ms)^-1 Reff_count: 3.06e-15 m^3/s Reff_calc: 3.25e-15 m^3/s
+collisions: 72523730 electrons: 1337691 E: 9.775e+00 eV w_bulk: 3.759e+05 m/s w_flux: 2.704e+05 m/s DN_bulk: 4.24e+24 (ms)^-1 DN_flux: 3.66e+24 (ms)^-1 Reff_count: 3.06e-15 m^3/s Reff_calc: 3.25e-15 m^3/s
+collisions: 73349131 electrons: 1347104 E: 9.773e+00 eV w_bulk: 3.755e+05 m/s w_flux: 2.697e+05 m/s DN_bulk: 4.23e+24 (ms)^-1 DN_flux: 3.65e+24 (ms)^-1 Reff_count: 3.06e-15 m^3/s Reff_calc: 3.24e-15 m^3/s
+collisions: 74171277 electrons: 1355336 E: 9.768e+00 eV w_bulk: 3.752e+05 m/s w_flux: 2.686e+05 m/s DN_bulk: 4.23e+24 (ms)^-1 DN_flux: 3.64e+24 (ms)^-1 Reff_count: 3.06e-15 m^3/s Reff_calc: 3.22e-15 m^3/s
+collisions: 75061490 electrons: 1375857 E: 9.761e+00 eV w_bulk: 3.748e+05 m/s w_flux: 2.745e+05 m/s DN_bulk: 4.22e+24 (ms)^-1 DN_flux: 3.68e+24 (ms)^-1 Reff_count: 3.06e-15 m^3/s Reff_calc: 3.24e-15 m^3/s
+collisions: 76865984 electrons: 1412069 E: 9.771e+00 eV w_bulk: 3.742e+05 m/s w_flux: 2.744e+05 m/s DN_bulk: 4.21e+24 (ms)^-1 DN_flux: 3.67e+24 (ms)^-1 Reff_count: 3.07e-15 m^3/s Reff_calc: 3.27e-15 m^3/s
+collisions: 77758810 electrons: 1425544 E: 9.772e+00 eV w_bulk: 3.739e+05 m/s w_flux: 2.733e+05 m/s DN_bulk: 4.21e+24 (ms)^-1 DN_flux: 3.66e+24 (ms)^-1 Reff_count: 3.07e-15 m^3/s Reff_calc: 3.27e-15 m^3/s
+collisions: 78641652 electrons: 1436556 E: 9.771e+00 eV w_bulk: 3.737e+05 m/s w_flux: 2.729e+05 m/s DN_bulk: 4.20e+24 (ms)^-1 DN_flux: 3.64e+24 (ms)^-1 Reff_count: 3.07e-15 m^3/s Reff_calc: 3.26e-15 m^3/s
+collisions: 79522645 electrons: 1446507 E: 9.766e+00 eV w_bulk: 3.734e+05 m/s w_flux: 2.716e+05 m/s DN_bulk: 4.20e+24 (ms)^-1 DN_flux: 3.64e+24 (ms)^-1 Reff_count: 3.07e-15 m^3/s Reff_calc: 3.25e-15 m^3/s
+collisions: 80413240 electrons: 1457067 E: 9.757e+00 eV w_bulk: 3.731e+05 m/s w_flux: 2.705e+05 m/s DN_bulk: 4.20e+24 (ms)^-1 DN_flux: 3.64e+24 (ms)^-1 Reff_count: 3.07e-15 m^3/s Reff_calc: 3.24e-15 m^3/s
+collisions: 81296724 electrons: 1465992 E: 9.755e+00 eV w_bulk: 3.728e+05 m/s w_flux: 2.700e+05 m/s DN_bulk: 4.19e+24 (ms)^-1 DN_flux: 3.63e+24 (ms)^-1 Reff_count: 3.07e-15 m^3/s Reff_calc: 3.23e-15 m^3/s
+collisions: 82243972 electrons: 1484993 E: 9.744e+00 eV w_bulk: 3.725e+05 m/s w_flux: 2.741e+05 m/s DN_bulk: 4.19e+24 (ms)^-1 DN_flux: 3.65e+24 (ms)^-1 Reff_count: 3.07e-15 m^3/s Reff_calc: 3.24e-15 m^3/s
+collisions: 83186927 electrons: 1501053 E: 9.745e+00 eV w_bulk: 3.722e+05 m/s w_flux: 2.735e+05 m/s DN_bulk: 4.18e+24 (ms)^-1 DN_flux: 3.65e+24 (ms)^-1 Reff_count: 3.08e-15 m^3/s Reff_calc: 3.24e-15 m^3/s
+collisions: 84131535 electrons: 1515637 E: 9.744e+00 eV w_bulk: 3.720e+05 m/s w_flux: 2.724e+05 m/s DN_bulk: 4.18e+24 (ms)^-1 DN_flux: 3.64e+24 (ms)^-1 Reff_count: 3.08e-15 m^3/s Reff_calc: 3.24e-15 m^3/s
+collisions: 85132443 electrons: 1539187 E: 9.751e+00 eV w_bulk: 3.717e+05 m/s w_flux: 2.758e+05 m/s DN_bulk: 4.18e+24 (ms)^-1 DN_flux: 3.67e+24 (ms)^-1 Reff_count: 3.08e-15 m^3/s Reff_calc: 3.26e-15 m^3/s
+collisions: 86220562 electrons: 1581224 E: 9.806e+00 eV w_bulk: 3.716e+05 m/s w_flux: 2.851e+05 m/s DN_bulk: 4.17e+24 (ms)^-1 DN_flux: 3.72e+24 (ms)^-1 Reff_count: 3.08e-15 m^3/s Reff_calc: 3.33e-15 m^3/s
+collisions: 87383423 electrons: 1640977 E: 9.911e+00 eV w_bulk: 3.715e+05 m/s w_flux: 2.940e+05 m/s DN_bulk: 4.17e+24 (ms)^-1 DN_flux: 3.78e+24 (ms)^-1 Reff_count: 3.08e-15 m^3/s Reff_calc: 3.44e-15 m^3/s
+collisions: 88561604 electrons: 1688914 E: 9.941e+00 eV w_bulk: 3.715e+05 m/s w_flux: 2.932e+05 m/s DN_bulk: 4.17e+24 (ms)^-1 DN_flux: 3.78e+24 (ms)^-1 Reff_count: 3.08e-15 m^3/s Reff_calc: 3.51e-15 m^3/s
+collisions: 89753918 electrons: 1730033 E: 9.976e+00 eV w_bulk: 3.715e+05 m/s w_flux: 2.921e+05 m/s DN_bulk: 4.17e+24 (ms)^-1 DN_flux: 3.79e+24 (ms)^-1 Reff_count: 3.08e-15 m^3/s Reff_calc: 3.57e-15 m^3/s
+collisions: 90942976 electrons: 1762503 E: 9.985e+00 eV w_bulk: 3.716e+05 m/s w_flux: 2.911e+05 m/s DN_bulk: 4.17e+24 (ms)^-1 DN_flux: 3.78e+24 (ms)^-1 Reff_count: 3.08e-15 m^3/s Reff_calc: 3.60e-15 m^3/s
+collisions: 92122258 electrons: 1787903 E: 9.986e+00 eV w_bulk: 3.716e+05 m/s w_flux: 2.908e+05 m/s DN_bulk: 4.17e+24 (ms)^-1 DN_flux: 3.77e+24 (ms)^-1 Reff_count: 3.08e-15 m^3/s Reff_calc: 3.62e-15 m^3/s
+collisions: 93310763 electrons: 1813826 E: 9.996e+00 eV w_bulk: 3.716e+05 m/s w_flux: 2.895e+05 m/s DN_bulk: 4.18e+24 (ms)^-1 DN_flux: 3.78e+24 (ms)^-1 Reff_count: 3.09e-15 m^3/s Reff_calc: 3.63e-15 m^3/s
+collisions: 94492776 electrons: 1835223 E: 9.998e+00 eV w_bulk: 3.716e+05 m/s w_flux: 2.883e+05 m/s DN_bulk: 4.18e+24 (ms)^-1 DN_flux: 3.77e+24 (ms)^-1 Reff_count: 3.09e-15 m^3/s Reff_calc: 3.63e-15 m^3/s
+collisions: 95660566 electrons: 1852506 E: 9.998e+00 eV w_bulk: 3.716e+05 m/s w_flux: 2.883e+05 m/s DN_bulk: 4.18e+24 (ms)^-1 DN_flux: 3.75e+24 (ms)^-1 Reff_count: 3.09e-15 m^3/s Reff_calc: 3.63e-15 m^3/s
+collisions: 96815931 electrons: 1866666 E: 9.996e+00 eV w_bulk: 3.717e+05 m/s w_flux: 2.875e+05 m/s DN_bulk: 4.18e+24 (ms)^-1 DN_flux: 3.74e+24 (ms)^-1 Reff_count: 3.09e-15 m^3/s Reff_calc: 3.62e-15 m^3/s
+collisions: 97964492 electrons: 1879062 E: 9.990e+00 eV w_bulk: 3.717e+05 m/s w_flux: 2.860e+05 m/s DN_bulk: 4.18e+24 (ms)^-1 DN_flux: 3.73e+24 (ms)^-1 Reff_count: 3.09e-15 m^3/s Reff_calc: 3.60e-15 m^3/s
+collisions: 99108206 electrons: 1890063 E: 9.983e+00 eV w_bulk: 3.717e+05 m/s w_flux: 2.847e+05 m/s DN_bulk: 4.18e+24 (ms)^-1 DN_flux: 3.73e+24 (ms)^-1 Reff_count: 3.09e-15 m^3/s Reff_calc: 3.58e-15 m^3/s
+collisions: 100240696 electrons: 1899447 E: 9.980e+00 eV w_bulk: 3.716e+05 m/s w_flux: 2.841e+05 m/s DN_bulk: 4.18e+24 (ms)^-1 DN_flux: 3.71e+24 (ms)^-1 Reff_count: 3.09e-15 m^3/s Reff_calc: 3.56e-15 m^3/s
+simulation ended: maximum number of collisions reached 
+{Operation terminated by user during <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('matlab.ui.internal.dialog.MATLABBlocker/blockMATLAB', 'C:\Program Files\MATLAB\R2025b\toolbox\matlab\uitools\uitools\+matlab\+ui\+internal\+dialog\MATLABBlocker.m', 11)" style="font-weight:bold">matlab.ui.internal.dialog.MATLABBlocker/blockMATLAB</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2025b\toolbox\matlab\uitools\uitools\+matlab\+ui\+internal\+dialog\MATLABBlocker.m',11,0)">line 11</a>)
+
+
+In <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('matlab.ui.internal.dialog.WebFileChooser/showDialog', 'C:\Program Files\MATLAB\R2025b\toolbox\matlab\uitools\uitools\+matlab\+ui\+internal\+dialog\WebFileChooser.m', 97)" style="font-weight:bold">matlab.ui.internal.dialog.WebFileChooser/showDialog</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2025b\toolbox\matlab\uitools\uitools\+matlab\+ui\+internal\+dialog\WebFileChooser.m',97,0)">line 97</a>)
+            obj.blockMATLAB();
+            ^^^^^^^^^^^^^^^^^
+In <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('uigetputfile_helper', 'C:\Program Files\MATLAB\R2025b\toolbox\matlab\uitools\uitools\private\uigetputfile_helper.m', 61)" style="font-weight:bold">uigetputfile_helper</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2025b\toolbox\matlab\uitools\uitools\private\uigetputfile_helper.m',61,0)">line 61</a>)
+        ufd.showDialog(dialog_filter, uigetputtype);
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('uiputfile', 'C:\Program Files\MATLAB\R2025b\toolbox\matlab\uitools\uitools\uiputfile.m', 111)" style="font-weight:bold">uiputfile</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2025b\toolbox\matlab\uitools\uitools\uiputfile.m',111,0)">line 111</a>)
+[filename, pathname, filterindex] = uigetputfile_helper(1, varargin{:});
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In matlab.graphics.internal.toolstrip.exportHelper
+
+In matlab.graphics.internal.toolstrip.FigureToolstripActionFactory>@(fig,~)matlab.graphics.internal.toolstrip.exportHelper(fig,'png')
+
+In matlab.graphics.internal.toolstrip.FigureToolstripActionFactory/executeAction
+
+In matlab.graphics.internal.toolstrip.FigureToolstripManager.actionCallback
+} 
+{Operation terminated by user during <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('findall', 'C:\Program Files\MATLAB\R2025b\toolbox\matlab\graphics\graphics\objectsystem\findall.m', 17)" style="font-weight:bold">findall</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2025b\toolbox\matlab\graphics\graphics\objectsystem\findall.m',17,0)">line 17</a>)
+
+
+In matlab.graphics.internal.toolstrip.FigureToolstripManager.getFigureById
+
+In matlab.graphics.internal.toolstrip.FigureToolstripManager.updategcf
+} 
+MonteCarlo_single_run
+{Operation terminated by user during <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('uiwait', 'C:\Program Files\MATLAB\R2025b\toolbox\matlab\uitools\uitools\uiwait.m', 81)" style="font-weight:bold">uiwait</a> (<a href="matlab: opentoline('C:\Program Files\MATLAB\R2025b\toolbox\matlab\uitools\uitools\uiwait.m',81,0)">line 81</a>)
+
+
+In <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('importLXcat/plotXsections', 'C:\Users\isaac\OneDrive\Documents\McGill\Townsend Approximation\METHES\_functions\importLXcat.m', 889)" style="font-weight:bold">importLXcat/plotXsections</a> (<a href="matlab: opentoline('C:\Users\isaac\OneDrive\Documents\McGill\Townsend Approximation\METHES\_functions\importLXcat.m',889,0)">line 889</a>)
+                    uiwait(gcf);
+                    ^^^^^^^^^^^
+In <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('MonteCarlo_single_run', 'C:\Users\isaac\OneDrive\Documents\McGill\Townsend Approximation\METHES\Ar\MonteCarlo_single_run.m', 89)" style="font-weight:bold">MonteCarlo_single_run</a> (<a href="matlab: opentoline('C:\Users\isaac\OneDrive\Documents\McGill\Townsend Approximation\METHES\Ar\MonteCarlo_single_run.m',89,0)">line 89</a>)
+Xsec.plotXsections(textsize,xscale,yscale);
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+} 
