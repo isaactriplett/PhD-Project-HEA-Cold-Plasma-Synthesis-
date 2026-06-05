@@ -850,7 +850,7 @@ classdef MonteCarlo
                 
                 if ~isempty(obj.T_sst)
                     
-                    ind = find(obj.t > obj.T_sst);
+                    ind = obj.ind_sst+1:length(obj.t);
                     
                     if length(ind) > 10
                         
