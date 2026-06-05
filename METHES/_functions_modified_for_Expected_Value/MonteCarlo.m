@@ -137,6 +137,8 @@ classdef MonteCarlo
             End = 0;
             % euqilibrium time
             T_sst
+            % index into obj.t where steady-state begins (cached to avoid repeated linear scan)
+            ind_sst = []
             % line number in output file:
             line = 1
             % computation time:
@@ -727,8 +729,6 @@ classdef MonteCarlo
                 
                 if ~isempty(obj.T_sst)
                     
-                    ind = find(obj.t >= obj.T_sst);
-                    
                     % integrated velocity
                     obj.v_int = obj.v*obj.dt + a/2*obj.dt^2;
                     % integrated velocity-squared
@@ -776,7 +776,7 @@ classdef MonteCarlo
                 
                 if ~isempty(obj.T_sst)
                     
-                    ind = find(obj.t >= obj.T_sst);
+                    ind = obj.ind_sst:length(obj.t);
                     
                     if length(ind) > 10
                         
@@ -821,7 +821,7 @@ classdef MonteCarlo
                 
                 if ~isempty(obj.T_sst)
                     
-                    ind = find(obj.t >= obj.T_sst);
+                    ind = obj.ind_sst:length(obj.t);
                     
                     if length(ind) > 10
                         
@@ -909,7 +909,7 @@ classdef MonteCarlo
                 
                 if ~isempty(obj.T_sst)
                     
-                    ind = find(obj.t >= obj.T_sst);
+                    ind = obj.ind_sst:length(obj.t);
 
                     
                     if length(ind) > 10
@@ -991,7 +991,7 @@ classdef MonteCarlo
                 
                 if ~isempty(obj.T_sst)
                     
-                    ind = find(obj.t >= obj.T_sst);
+                    ind = obj.ind_sst:length(obj.t);
                     
                     if length(ind) > 10
                         
@@ -1489,6 +1489,7 @@ classdef MonteCarlo
                             if mean(obj.mean.energy(end-2*n:end-n)) >= mean(obj.mean.energy(end-n:end))
                                 
                                 obj.T_sst = obj.t(end);
+                                obj.ind_sst = length(obj.t);
                                 obj.counter = 0;
                                 obj.collisions = 0;
                                 obj.line = 1;
