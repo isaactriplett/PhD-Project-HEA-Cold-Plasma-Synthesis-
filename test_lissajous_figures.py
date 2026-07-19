@@ -10,9 +10,11 @@ import numpy as np
 from Lissajous_Figures import (
     AnalysisError,
     apparent_charge_equivalent_rates,
+    duty_activity_mask,
     estimate_fundamental_frequency,
     resolve_current_polarity,
     save_processed_csv,
+    select_two_duty_cycles,
 )
 
 
@@ -166,6 +168,52 @@ class CurrentPolarityTests(unittest.TestCase):
         self.assertIn("current_input_A,current_corrected_A", header)
         np.testing.assert_allclose(data[:, 3], current_input)
         np.testing.assert_allclose(data[:, 4], current_corrected)
+
+
+class DutyCycleAuditTests(unittest.TestCase):
+    @staticmethod
+    def synthetic_burst_trace(duty_fraction: float = 0.25):
+        sample_rate_hz = 1_000_000.0
+        carrier_hz = 20_000.0
+        burst_hz = 1_000.0
+        time_s = np.arange(0.0, 0.020, 1.0 / sample_rate_hz)
+        phase = np.mod(time_s * burst_hz, 1.0)
+        expected_active = phase < duty_fraction
+        envelope = expected_active.astype(float)
+        voltage_v = 5_000.0 * envelope * np.sin(2.0 * np.pi * carrier_hz * time_s)
+        current_a = 0.020 * envelope * np.cos(2.0 * np.pi * carrier_hz * time_s)
+        return time_s, voltage_v, current_a, expected_active, carrier_hz, burst_hz
+
+    def test_detects_approximately_quarter_duty_fraction(self):
+        time_s, voltage_v, current_a, _, _, burst_hz = self.synthetic_burst_trace()
+        selection = select_two_duty_cycles(time_s, voltage_v, current_a)
+        self.assertNotIn("fallback", selection.method)
+        self.assertAlmostEqual(selection.frequency_Hz, burst_hz, delta=0.01 * burst_hz)
+        self.assertIsNotNone(selection.active_fraction)
+        self.assertAlmostEqual(selection.active_fraction, 0.25, delta=0.04)
+        self.assertGreater(selection.envelope_contrast, 0.90)
+        self.assertIsNotNone(selection.activity_threshold)
+
+    def test_continuous_wave_fallback_is_fully_active(self):
+        time_s, _, _, _, carrier_hz, _ = self.synthetic_burst_trace()
+        voltage_v = 5_000.0 * np.sin(2.0 * np.pi * carrier_hz * time_s)
+        current_a = 0.020 * np.cos(2.0 * np.pi * carrier_hz * time_s)
+        selection = select_two_duty_cycles(time_s, voltage_v, current_a)
+        mask = duty_activity_mask(time_s, voltage_v, current_a, selection)
+        self.assertEqual(selection.method, "dominant voltage frequency fallback")
+        self.assertEqual(selection.active_fraction, 1.0)
+        self.assertIsNotNone(mask)
+        self.assertTrue(np.all(mask))
+
+    def test_activity_mask_aligns_with_synthetic_burst(self):
+        time_s, voltage_v, current_a, expected_active, _, _ = self.synthetic_burst_trace()
+        selection = select_two_duty_cycles(time_s, voltage_v, current_a)
+        mask = duty_activity_mask(time_s, voltage_v, current_a, selection)
+        self.assertIsNotNone(mask)
+        self.assertEqual(mask.dtype, np.bool_)
+        self.assertEqual(mask.shape, time_s.shape)
+        self.assertGreater(float(np.mean(mask == expected_active)), 0.95)
+        self.assertAlmostEqual(float(np.mean(mask)), selection.active_fraction, delta=0.01)
 
 
 if __name__ == "__main__":

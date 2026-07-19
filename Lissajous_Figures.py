@@ -110,6 +110,9 @@ class DutyCycleSelection:
     method: str
     activity_channel: str
     cycles_displayed: float
+    active_fraction: float | None = None
+    envelope_contrast: float | None = None
+    activity_threshold: float | None = None
 
 
 @dataclass
@@ -530,6 +533,19 @@ def select_two_duty_cycles(
     else:
         stop = min(count, start + full_window)
     displayed = 2.0 if aligned_window is not None else (stop - start) / period_samples
+    selected_contrast = float(contrasts.get(activity_channel, 0.0))
+    low, high = np.percentile(envelope, (10, 90))
+    activity_threshold = float(low + 0.30 * (high - low))
+    if method == "dominant voltage frequency fallback":
+        # A continuous carrier has no slower duty envelope; its excitation is
+        # active for the full carrier period by definition.
+        active_fraction: float | None = 1.0
+    elif method == "record-duration fallback" or high <= np.finfo(float).eps:
+        active_fraction = None
+    else:
+        edge = min(envelope_window, count // 10)
+        usable = envelope[edge : count - edge] if count - 2 * edge >= 16 else envelope
+        active_fraction = float(np.mean(usable >= activity_threshold))
     return DutyCycleSelection(
         start=start,
         stop=stop,
@@ -539,7 +555,44 @@ def select_two_duty_cycles(
         method=method,
         activity_channel=activity_channel,
         cycles_displayed=float(displayed),
+        active_fraction=active_fraction,
+        envelope_contrast=selected_contrast,
+        activity_threshold=activity_threshold,
     )
+
+
+def duty_activity_mask(
+    time_s: np.ndarray,
+    voltage_V: np.ndarray,
+    current_A: np.ndarray,
+    selection: DutyCycleSelection,
+) -> np.ndarray | None:
+    """Recreate the exact activity mask used by duty-cycle detection.
+
+    The returned mask is an electrical-envelope audit, not a direct plasma
+    conduction indicator.  ``None`` marks a record-duration fallback for which
+    no defensible activity threshold was identified.
+    """
+    if selection.active_fraction is None or selection.activity_threshold is None:
+        return None
+    if selection.method == "dominant voltage frequency fallback":
+        return np.ones(len(time_s), dtype=bool)
+    if len(time_s) < 8:
+        return None
+    spacing = np.diff(time_s)
+    dt_s = float(np.median(spacing))
+    if not np.isfinite(dt_s) or dt_s <= 0:
+        return None
+    carrier_frequency = estimate_fundamental_frequency(time_s, voltage_V)
+    if carrier_frequency is not None:
+        carrier_samples = max(3, int(round(1.0 / (carrier_frequency * dt_s))))
+    else:
+        carrier_samples = max(3, len(time_s) // 16)
+    envelope_window = max(5, int(round(1.5 * carrier_samples)) | 1)
+    envelope_window = min(envelope_window, max(5, (len(time_s) // 5) | 1))
+    source = voltage_V if selection.activity_channel == "voltage" else current_A
+    envelope = moving_average(normalize_activity(source), envelope_window)
+    return envelope >= float(selection.activity_threshold)
 
 
 def choose_smoothing_window(requested: int, samples_per_half_cycle: int) -> int:
@@ -1704,6 +1757,9 @@ def run_analysis(args: argparse.Namespace) -> tuple[dict, str]:
         "duty_cycle_zoom": {
             "detection_method": duty_cycle_selection.method,
             "activity_channel": duty_cycle_selection.activity_channel,
+            "active_fraction": safe_float(duty_cycle_selection.active_fraction),
+            "envelope_contrast": safe_float(duty_cycle_selection.envelope_contrast),
+            "activity_threshold": safe_float(duty_cycle_selection.activity_threshold),
             "duty_cycle_frequency_Hz": safe_float(duty_cycle_selection.frequency_Hz),
             "duty_cycle_period_ms": safe_float(duty_cycle_selection.period_s * 1.0e3),
             "period_samples": duty_cycle_selection.period_samples,

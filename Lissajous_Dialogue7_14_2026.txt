@@ -1,0 +1,19 @@
+Done. [Lissajous_Figures.py (line 574)](/C:/repos/PhD-Project-HEA-Cold-Plasma-Synthesis-/Lissajous_Figures.py:574) now:
+Automatically determines current polarity using half-cycle charge conservation.
+Applies the correction before plotting and analysis.
+Records the raw and corrected currents in the processed CSV.
+Reports the multiplier, correlation, confidence, and number of evaluated half-cycles.
+Stops with a clear error on genuinely ambiguous data; override with --current-polarity 1 or -1.
+Tolerates isolated corrupt/missing oscilloscope samples.
+The archive-wide validation covered all 768 traces:
+Argon 20 kHz: all 64 retained with multiplier +1.
+Every other condition: all 704 corrected with multiplier -1.
+No unresolved traces remain after fixing sparse-gap frequency estimation.
+Seven tests pass in [test_lissajous_figures.py (line 18)](/C:/repos/PhD-Project-HEA-Cold-Plasma-Synthesis-/test_lissajous_figures.py:18), along with compilation and lint checks.
+Your recollection that no 50 Ω terminator was used supports retaining the saved Pearson scaling of 0.1 V/A; no factor-of-two correction is applied.
+Information still needed for absolute plasma–liquid surface flux:
+Actual liquid volume and beaker inner diameter.
+A scaled top-view image or measured area of the luminous plasma–liquid footprint.
+Conductivity of each liquid at the experimental temperature, ideally with permittivity.
+Glass type/relative permittivity and electrode–glass overlap area.
+Below-to-above-breakdown scans for each medium/frequency, plus a post-burst charge-decay window.

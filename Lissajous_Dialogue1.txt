@@ -1,0 +1,232 @@
+Lissajousfigure4kHz-0004_03.csv
+
+Here is an example of a waveform from an AC DBD experiment. The first column is time in ms, the second voltage in kV, the third current in amps, and the fourth voltage across a 0.1 microFarad Lissajous capacitor in volts. Write a script which inputs a file like this and outputs the waveforms of voltage, current, and accumulated charge across the Lissajous capacitor. Also, output a Lissajous figure, with fits for the dispacement and discharge capacitances. Calculate and output both capacitances. Also, calculate and output the quantity of charge reaching the dielectric.
+
+
+
+
+
+Thursday 9:26 PM
+
+
+
+
+
+
+Worked for 2m 4s
+
+
+
+Edited Lissajous_Figures.py+890-0Review changesUndoReview
+
+
+
+
+
+
+is it done?
+
+
+
+
+
+Thursday 9:40 PM
+
+
+
+
+
+
+Worked for 14m 28s
+
+
+
+Yes. The completed script is [Lissajous_Figures.py](/C:/repos/PhD-Project-HEA-Cold-Plasma-Synthesis-/Lissajous_Figures.py).
+Run it with:
+python Lissajous_Figures.py "C:\Users\isaac\OneDrive\Documents\McGill\McGill Experiments\waveforms\July 2026\argon\Lissajousfigure4kHz-0004\Lissajousfigure4kHz-0004_03.csv" --no-show
+It writes waveform and Q–V plots, processed charge data, and JSON/text results. It uses the standard monitor-capacitor relation \(Q=C_\mathrm{ref}V_\mathrm{ref}\), with plasma-off/on Q–V slopes for the capacitances. Reference
+I validated the fitting against a synthetic 30 pF / 100 pF case. Your supplied capture is a 4 kHz burst train with ~128 kHz ringing, producing spiral Q–V loops rather than a classical four-sided Lissajous figure; the script correctly flags capacitances as unavailable instead of reporting misleading values.
+The default assumes column 2 is in kV as you described. If it is truly volts, add --voltage-scale 1.
+
+Edited Lissajous_Figures.py+161-93Review changesUndoReview
+
+
+
+
+
+Thursday 9:54 PM
+
+
+
+
+
+
+Traceback (most recent call last):
+  File "C:\repos\PhD-Project-HEA-Cold-Plasma-Synthesis-\Lissajous_Figures.py", line 38, in <module>
+    import matplotlib.pyplot as plt
+ModuleNotFoundError: No module named 'matplotlib'
+
+
+
+
+
+11:42 AM
+
+
+
+
+
+
+Worked for 35s
+
+
+
+matplotlib is already installed in your Anaconda Python; the script is being run with a different interpreter.
+Run it from PowerShell with:
+& "C:\Users\isaac\anaconda3\python.exe" "C:\repos\PhD-Project-HEA-Cold-Plasma-Synthesis-\Lissajous_Figures.py" "C:\Users\isaac\OneDrive\Documents\McGill\McGill Experiments\waveforms\July 2026\argon\Lissajousfigure4kHz-0004\Lissajousfigure4kHz-0004_03.csv" --no-show
+Your default python currently points to the WindowsApps launcher, while C:\Users\isaac\anaconda3\python.exe has both NumPy and Matplotlib installed.
+
+
+11:42 AM
+
+
+
+
+
+
+Great job, now add a figure output which is the same as the waveform figure but zoomed in to show two duty cycles (no matter what the duty cycle frequency is - the script should figure this out from the waveform)
+
+
+
+
+
+11:49 AM
+
+
+
+
+
+
+Worked for 15m 32s
+
+
+
+Done. [Lissajous_Figures.py](/C:/repos/PhD-Project-HEA-Cold-Plasma-Synthesis-/Lissajous_Figures.py) now also writes:
+<input-stem>_waveforms_two_duty_cycles.png
+It detects repeated voltage/current burst envelopes, selects two adjacent duty cycles, and records the period, frequency, window, and detection method in the JSON summary.
+For your supplied trace it detects 3,999.7 Hz and plots exactly two bursts. For continuous AC without burst gating, it falls back to a two-carrier-cycle zoom.
+
+Edited Lissajous_Figures.py+287-3Review changesUndoReview
+
+
+
+
+
+12:04 PM
+
+
+
+
+
+
+The current needs to be flipped to the negative of its current valuesk
+
+
+
+
+
+12:07 PM
+
+
+
+
+
+
+Worked for 43s
+
+
+
+Done. [Lissajous_Figures.py](/C:/repos/PhD-Project-HEA-Cold-Plasma-Synthesis-/Lissajous_Figures.py) now multiplies the current channel by −1 for all plots, duty-cycle detection, and processed-output CSVs. The original input CSV is unchanged.
+
+Edited Lissajous_Figures.py+5-0Review changesUndoReview
+
+
+
+
+
+12:08 PM
+
+
+
+
+
+
+
+Model changed from GPT-5.6 Terra to GPT-5.6 Luna.
+
+
+
+How do I connect codex web
+
+
+
+
+
+12:21 PM
+
+
+
+
+
+
+Worked for 1m 13s
+
+
+
+To connect this project to Codex web:
+Open Codex through ChatGPT and sign in with the same ChatGPT account.
+
+Choose Get Started or Connect to GitHub.
+
+Authorize the ChatGPT GitHub Connector in GitHub.
+
+Allow access to:
+isaactriplett/PhD-Project-HEA-Cold-Plasma-Synthesis-
+
+Return to Codex, create an environment from that repository, and start a task.
+
+Codex web requires GitHub connection for repository-based cloud work. Official setup guide  
+Important: Codex web sees the committed/pushed GitHub version. Your current uncommitted local changes must be committed and pushed first if you want them available online.
+
+
+12:22 PM
+
+
+
+
+
+
+To connect your VS Code project to Codex web, first make sure it exists in GitHub—Codex web works from the GitHub repository, not directly from your local VS Code folder.
+In VS Code, commit and push the project to GitHub.
+Open Codex in ChatGPT and sign in with the same ChatGPT account.
+Select Get Started or Connect to GitHub.
+Authorize the ChatGPT GitHub Connector and grant it access to your repository.
+Back in Codex, select that repository and choose Create environment.
+Start a task in the new environment.
+For your repository, grant access to isaactriplett/PhD-Project-HEA-Cold-Plasma-Synthesis-. The cloud environment will use whichever commit is currently pushed to GitHub; uncommitted VS Code edits will not appear there. OpenAI’s setup guide confirms the GitHub connector → environment → task flow, and Codex plan guidance notes that Codex web requires a GitHub connection.
+
+
+
+
+
+12:30 PM
+
+
+
+
+
+
+Yes—that’s the correct workflow. The only step you must perform yourself is GitHub authorization; once connected, Codex web can create the environment from the repository’s latest pushed commit.
+
+
+12:30 PM

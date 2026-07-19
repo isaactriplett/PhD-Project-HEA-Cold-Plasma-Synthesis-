@@ -1,0 +1,31 @@
+DBD voltage-scan analysis
+Analysis version: 2.0-scan
+Selected/analyzed files: 880/880 successful; 0 failed
+Selection: 16 evenly spaced captures per acquisition level
+
+Validated result
+  BMIM nitrate, 20 kHz: Ccell* = (27.853 - i 9.417) pF; tan(delta) = 0.3379.
+  5 mM Mn nitrate in water, 20 kHz: Ccell* = (23.081 - i 17.167) pF; tan(delta) = 0.7443.
+  These are carrier-frequency effective complex capacitances, not classical burst-wide Q-V slopes.
+
+Not identifiable from this dataset
+  Cd,eff: not identifiable for any condition.
+  Corrected plasma-to-surface charge per half-cycle: not identifiable for any condition.
+  Absolute positive/negative charge-equivalent flow rate: not identifiable for any condition.
+  Retained surface charge: not measured because the records lack quiet pre- and post-burst edges.
+
+Why the model stops
+  Argon 4/10/20 kHz and water 4 kHz fail passive Channel-D Q-V orientation/stability checks.
+  Water 10/20 kHz and BMIM/Mn 4/10 kHz have no independent complete voltage scan.
+  Although BMIM and Mn pass the passive complex-Ccell check, their 105%, 115%, and old-MAX
+  Channel-D extrema do not give a monotonic positive Cd > Ccell relationship.
+  Pearson current does not satisfy I = Cref*dVmonitor/dt: its gain is about 1.5-2.9 times
+  the nominal 0.1-uF prediction across the old MAX groups and usually has the wrong phase.
+  Pearson-derived charge is retained only as a flagged sensitivity range because an upstream
+  parallel current/probe/transformer contribution and termination/scale are unresolved.
+
+Interpretation limits
+  Negative charge is an electron-plus-negative-ion equivalent; species are not separable electrically.
+  The p95 half-cycle-average value is not an instantaneous nanosecond microdischarge peak.
+  Charge imbalance over a 10-ms record is not retained dielectric charge.
+  All nominal Channel-D charge values scale with the actual monitor-capacitor value and probe calibration.

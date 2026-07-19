@@ -1,0 +1,1533 @@
+{
+  "analysis_version": "2.0-scan",
+  "archive": "C:\\Users\\isaac\\OneDrive\\Documents\\McGill\\McGill Experiments\\waveforms\\July 2026\\Lissajouswaveformsdifferentmediums.zip",
+  "files_per_level_requested": 16,
+  "raw_members_found": 3520,
+  "selected_files": 880,
+  "successfully_analyzed_files": 880,
+  "failures": [],
+  "conditions": {
+    "5mM_Mn_nitrate_in_water_4kHz": {
+      "condition": {
+        "material": "5mM_Mn_nitrate_in_water",
+        "burst_kHz": 4
+      },
+      "complete_scan": false,
+      "files_analyzed": 16,
+      "monitor_qv_passive_valid": false,
+      "monitor_kcl_with_pearson_valid": false,
+      "monitor_Cprime_pF": null,
+      "monitor_Closs_pF": null,
+      "monitor_tan_delta": null,
+      "monitor_phase_abs_median_deg": null,
+      "monitor_Cprime_relative_span": null,
+      "pearson_to_monitor_gain_ratio": null,
+      "pearson_to_monitor_phase_error_deg": null,
+      "routes": {
+        "monitor": {
+          "level_medians": {
+            "MAX": {
+              "x": -3.2743648457120003,
+              "y": 510.2485188,
+              "voltage_pp_kV": 7.90047220106,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 0
+          },
+          "on_qmax_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 1
+          },
+          "Ccell_pF": null,
+          "Cd_effective_high_field_pF": null,
+          "Cd_global_pF": null,
+          "Cd_high_field_secant_pF": null,
+          "gas_charge_correction_factor": null,
+          "model_identifiable": false
+        },
+        "current": {
+          "level_medians": {
+            "MAX": {
+              "x": 7.836546785912001,
+              "y": 931.9182892450024,
+              "voltage_pp_kV": 7.90047220106,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 0
+          },
+          "on_qmax_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 1
+          },
+          "Ccell_pF": null,
+          "Cd_effective_high_field_pF": null,
+          "Cd_global_pF": null,
+          "Cd_high_field_secant_pF": null,
+          "gas_charge_correction_factor": null,
+          "model_identifiable": false
+        }
+      },
+      "interpretation": "The monitor route is absolute only if Channel D wiring/value is independently known and the passive Q-V check passes. Pearson KCL failure means Channel C cannot validate Channel D; it may include upstream parasitic current or incorrect termination/scaling. The current route is therefore a provisional fallback, not an independent absolute calibration."
+    },
+    "5mM_Mn_nitrate_in_water_10kHz": {
+      "condition": {
+        "material": "5mM_Mn_nitrate_in_water",
+        "burst_kHz": 10
+      },
+      "complete_scan": false,
+      "files_analyzed": 16,
+      "monitor_qv_passive_valid": false,
+      "monitor_kcl_with_pearson_valid": false,
+      "monitor_Cprime_pF": null,
+      "monitor_Closs_pF": null,
+      "monitor_tan_delta": null,
+      "monitor_phase_abs_median_deg": null,
+      "monitor_Cprime_relative_span": null,
+      "pearson_to_monitor_gain_ratio": null,
+      "pearson_to_monitor_phase_error_deg": null,
+      "routes": {
+        "monitor": {
+          "level_medians": {
+            "MAX": {
+              "x": 4.490020527328,
+              "y": 440.735734,
+              "voltage_pp_kV": 7.74237660106,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 0
+          },
+          "on_qmax_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 1
+          },
+          "Ccell_pF": null,
+          "Cd_effective_high_field_pF": null,
+          "Cd_global_pF": null,
+          "Cd_high_field_secant_pF": null,
+          "gas_charge_correction_factor": null,
+          "model_identifiable": false
+        },
+        "current": {
+          "level_medians": {
+            "MAX": {
+              "x": 7.5524137707720005,
+              "y": 881.5818773024246,
+              "voltage_pp_kV": 7.74237660106,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 0
+          },
+          "on_qmax_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 1
+          },
+          "Ccell_pF": null,
+          "Cd_effective_high_field_pF": null,
+          "Cd_global_pF": null,
+          "Cd_high_field_secant_pF": null,
+          "gas_charge_correction_factor": null,
+          "model_identifiable": false
+        }
+      },
+      "interpretation": "The monitor route is absolute only if Channel D wiring/value is independently known and the passive Q-V check passes. Pearson KCL failure means Channel C cannot validate Channel D; it may include upstream parasitic current or incorrect termination/scaling. The current route is therefore a provisional fallback, not an independent absolute calibration."
+    },
+    "5mM_Mn_nitrate_in_water_20kHz": {
+      "condition": {
+        "material": "5mM_Mn_nitrate_in_water",
+        "burst_kHz": 20
+      },
+      "complete_scan": true,
+      "files_analyzed": 128,
+      "monitor_qv_passive_valid": true,
+      "monitor_kcl_with_pearson_valid": false,
+      "monitor_Cprime_pF": 23.08093576138675,
+      "monitor_Closs_pF": 17.16721020763864,
+      "monitor_tan_delta": 0.7442960730415233,
+      "monitor_phase_abs_median_deg": 36.66016522453233,
+      "monitor_Cprime_relative_span": 0.026034912668988636,
+      "pearson_to_monitor_gain_ratio": 2.615339764283405,
+      "pearson_to_monitor_phase_error_deg": 35.96795785188422,
+      "routes": {
+        "monitor": {
+          "level_medians": {
+            "100": {
+              "x": 3.0288062845040002,
+              "y": 347.53321639999996,
+              "voltage_pp_kV": 6.0026443689999995,
+              "n_files": 16.0
+            },
+            "105": {
+              "x": 3.5644581120280003,
+              "y": 474.7077948000001,
+              "voltage_pp_kV": 6.79076885289,
+              "n_files": 16.0
+            },
+            "115": {
+              "x": 1.7168659622679998,
+              "y": 462.85064520000003,
+              "voltage_pp_kV": 7.2665731976900005,
+              "n_files": 16.0
+            },
+            "40": {
+              "x": 0.662217947,
+              "y": 55.271899999999995,
+              "voltage_pp_kV": 2.05309607578,
+              "n_files": 16.0
+            },
+            "60": {
+              "x": 0.8198840670780001,
+              "y": 78.9646907,
+              "voltage_pp_kV": 3.15899140789,
+              "n_files": 16.0
+            },
+            "75": {
+              "x": 1.641209055308,
+              "y": 88.44119180000001,
+              "voltage_pp_kV": 3.63266272789,
+              "n_files": 16.0
+            },
+            "90": {
+              "x": 1.7047266198370001,
+              "y": 78.9616148,
+              "voltage_pp_kV": 4.4222883598400005,
+              "n_files": 16.0
+            },
+            "MAX": {
+              "x": -2.3430342943269995,
+              "y": 534.7317865,
+              "voltage_pp_kV": 8.2160312406,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": 26.535027500648457,
+            "intercept": 46.600212460254276,
+            "r_squared": 0.6665183568411164,
+            "n": 3
+          },
+          "on_qmax_fit": {
+            "slope": -11.397317889775712,
+            "intercept": 501.9262830581955,
+            "r_squared": 0.7988207759400717,
+            "n": 3
+          },
+          "Ccell_pF": 23.08093576138675,
+          "Cd_effective_high_field_pF": -17.70514957436073,
+          "Cd_global_pF": -11.397317889775712,
+          "Cd_high_field_secant_pF": -17.70514957436073,
+          "gas_charge_correction_factor": null,
+          "model_identifiable": false
+        },
+        "current": {
+          "level_medians": {
+            "100": {
+              "x": 5.78052096761,
+              "y": 645.0048681706642,
+              "voltage_pp_kV": 6.0026443689999995,
+              "n_files": 16.0
+            },
+            "105": {
+              "x": 6.521169327874,
+              "y": 757.8724981216176,
+              "voltage_pp_kV": 6.79076885289,
+              "n_files": 16.0
+            },
+            "115": {
+              "x": 7.154247413262001,
+              "y": 832.0437569265696,
+              "voltage_pp_kV": 7.2665731976900005,
+              "n_files": 16.0
+            },
+            "40": {
+              "x": 1.958002020674,
+              "y": 152.20892397723202,
+              "voltage_pp_kV": 2.05309607578,
+              "n_files": 16.0
+            },
+            "60": {
+              "x": 2.9060544494380003,
+              "y": 226.89445565969015,
+              "voltage_pp_kV": 3.15899140789,
+              "n_files": 16.0
+            },
+            "75": {
+              "x": 3.632410390294001,
+              "y": 281.64770086685473,
+              "voltage_pp_kV": 3.63266272789,
+              "n_files": 16.0
+            },
+            "90": {
+              "x": 4.422114762401,
+              "y": 340.4611316197028,
+              "voltage_pp_kV": 4.4222883598400005,
+              "n_files": 16.0
+            },
+            "MAX": {
+              "x": 7.851763815733,
+              "y": 929.1632943645486,
+              "voltage_pp_kV": 8.2160312406,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": 77.37740906952475,
+            "intercept": 1.1054962001602862,
+            "r_squared": 0.9998467779166555,
+            "n": 3
+          },
+          "on_qmax_fit": {
+            "slope": 128.91016167227392,
+            "intercept": -85.33092550715976,
+            "r_squared": 0.9975771189624185,
+            "n": 3
+          },
+          "Ccell_pF": 75.31991132196981,
+          "Cd_effective_high_field_pF": 139.23620590702456,
+          "Cd_global_pF": 128.91016167227392,
+          "Cd_high_field_secant_pF": 139.23620590702456,
+          "gas_charge_correction_factor": 2.1784148597935387,
+          "model_identifiable": true
+        }
+      },
+      "interpretation": "The monitor route is absolute only if Channel D wiring/value is independently known and the passive Q-V check passes. Pearson KCL failure means Channel C cannot validate Channel D; it may include upstream parasitic current or incorrect termination/scaling. The current route is therefore a provisional fallback, not an independent absolute calibration."
+    },
+    "BMIM_nitrate_4kHz": {
+      "condition": {
+        "material": "BMIM_nitrate",
+        "burst_kHz": 4
+      },
+      "complete_scan": false,
+      "files_analyzed": 16,
+      "monitor_qv_passive_valid": false,
+      "monitor_kcl_with_pearson_valid": false,
+      "monitor_Cprime_pF": null,
+      "monitor_Closs_pF": null,
+      "monitor_tan_delta": null,
+      "monitor_phase_abs_median_deg": null,
+      "monitor_Cprime_relative_span": null,
+      "pearson_to_monitor_gain_ratio": null,
+      "pearson_to_monitor_phase_error_deg": null,
+      "routes": {
+        "monitor": {
+          "level_medians": {
+            "MAX": {
+              "x": -1.964441409834,
+              "y": 571.8503834,
+              "voltage_pp_kV": 7.267632666512121,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 0
+          },
+          "on_qmax_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 1
+          },
+          "Ccell_pF": null,
+          "Cd_effective_high_field_pF": null,
+          "Cd_global_pF": null,
+          "Cd_high_field_secant_pF": null,
+          "gas_charge_correction_factor": null,
+          "model_identifiable": false
+        },
+        "current": {
+          "level_medians": {
+            "MAX": {
+              "x": 6.951733606704,
+              "y": 949.8825348322196,
+              "voltage_pp_kV": 7.267632666512121,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 0
+          },
+          "on_qmax_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 1
+          },
+          "Ccell_pF": null,
+          "Cd_effective_high_field_pF": null,
+          "Cd_global_pF": null,
+          "Cd_high_field_secant_pF": null,
+          "gas_charge_correction_factor": null,
+          "model_identifiable": false
+        }
+      },
+      "interpretation": "The monitor route is absolute only if Channel D wiring/value is independently known and the passive Q-V check passes. Pearson KCL failure means Channel C cannot validate Channel D; it may include upstream parasitic current or incorrect termination/scaling. The current route is therefore a provisional fallback, not an independent absolute calibration."
+    },
+    "BMIM_nitrate_10kHz": {
+      "condition": {
+        "material": "BMIM_nitrate",
+        "burst_kHz": 10
+      },
+      "complete_scan": false,
+      "files_analyzed": 16,
+      "monitor_qv_passive_valid": false,
+      "monitor_kcl_with_pearson_valid": false,
+      "monitor_Cprime_pF": null,
+      "monitor_Closs_pF": null,
+      "monitor_tan_delta": null,
+      "monitor_phase_abs_median_deg": null,
+      "monitor_Cprime_relative_span": null,
+      "pearson_to_monitor_gain_ratio": null,
+      "pearson_to_monitor_phase_error_deg": null,
+      "routes": {
+        "monitor": {
+          "level_medians": {
+            "MAX": {
+              "x": -2.216837333658,
+              "y": 556.8559285000001,
+              "voltage_pp_kV": 7.26769534998,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 0
+          },
+          "on_qmax_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 1
+          },
+          "Ccell_pF": null,
+          "Cd_effective_high_field_pF": null,
+          "Cd_global_pF": null,
+          "Cd_high_field_secant_pF": null,
+          "gas_charge_correction_factor": null,
+          "model_identifiable": false
+        },
+        "current": {
+          "level_medians": {
+            "MAX": {
+              "x": 6.983307003976,
+              "y": 886.5637944868413,
+              "voltage_pp_kV": 7.26769534998,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 0
+          },
+          "on_qmax_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 1
+          },
+          "Ccell_pF": null,
+          "Cd_effective_high_field_pF": null,
+          "Cd_global_pF": null,
+          "Cd_high_field_secant_pF": null,
+          "gas_charge_correction_factor": null,
+          "model_identifiable": false
+        }
+      },
+      "interpretation": "The monitor route is absolute only if Channel D wiring/value is independently known and the passive Q-V check passes. Pearson KCL failure means Channel C cannot validate Channel D; it may include upstream parasitic current or incorrect termination/scaling. The current route is therefore a provisional fallback, not an independent absolute calibration."
+    },
+    "BMIM_nitrate_20kHz": {
+      "condition": {
+        "material": "BMIM_nitrate",
+        "burst_kHz": 20
+      },
+      "complete_scan": true,
+      "files_analyzed": 128,
+      "monitor_qv_passive_valid": true,
+      "monitor_kcl_with_pearson_valid": false,
+      "monitor_Cprime_pF": 27.853206436138052,
+      "monitor_Closs_pF": 9.416831507286236,
+      "monitor_tan_delta": 0.3378634149262113,
+      "monitor_phase_abs_median_deg": 18.668229379436333,
+      "monitor_Cprime_relative_span": 0.03794691974964235,
+      "pearson_to_monitor_gain_ratio": 2.538983653588109,
+      "pearson_to_monitor_phase_error_deg": 18.268406446135856,
+      "routes": {
+        "monitor": {
+          "level_medians": {
+            "100": {
+              "x": 2.5409768259200005,
+              "y": 149.27411639999997,
+              "voltage_pp_kV": 4.737705796779999,
+              "n_files": 16.0
+            },
+            "105": {
+              "x": 3.218780331664,
+              "y": 305.65944520000005,
+              "voltage_pp_kV": 5.44836251268,
+              "n_files": 16.0
+            },
+            "115": {
+              "x": 3.9911109880360005,
+              "y": 461.2696796,
+              "voltage_pp_kV": 6.473748430575,
+              "n_files": 16.0
+            },
+            "40": {
+              "x": 0.630551422356,
+              "y": 63.17667399999999,
+              "voltage_pp_kV": 1.89492186563,
+              "n_files": 16.0
+            },
+            "60": {
+              "x": 0.7567435996,
+              "y": 88.43504,
+              "voltage_pp_kV": 2.8428794956300005,
+              "n_files": 16.0
+            },
+            "75": {
+              "x": 0.945961114096,
+              "y": 107.3818904,
+              "voltage_pp_kV": 3.31732403111,
+              "n_files": 16.0
+            },
+            "90": {
+              "x": -0.6803816489620002,
+              "y": 116.89222559999999,
+              "voltage_pp_kV": 4.10687054774,
+              "n_files": 16.0
+            },
+            "MAX": {
+              "x": -1.901185909464,
+              "y": 564.7545476,
+              "voltage_pp_kV": 7.74166547902,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": 136.99556813919233,
+            "intercept": -20.217381857566792,
+            "r_squared": 0.9616499774546899,
+            "n": 3
+          },
+          "on_qmax_fit": {
+            "slope": -29.51645863574417,
+            "intercept": 496.1259520168606,
+            "r_squared": 0.5252712425784655,
+            "n": 3
+          },
+          "Ccell_pF": 27.853206436138052,
+          "Cd_effective_high_field_pF": -17.562738232675756,
+          "Cd_global_pF": -29.51645863574417,
+          "Cd_high_field_secant_pF": -17.562738232675756,
+          "gas_charge_correction_factor": null,
+          "model_identifiable": false
+        },
+        "current": {
+          "level_medians": {
+            "100": {
+              "x": 4.579326240095,
+              "y": 469.89441650833146,
+              "voltage_pp_kV": 4.737705796779999,
+              "n_files": 16.0
+            },
+            "105": {
+              "x": 5.242483102966001,
+              "y": 557.5079977463396,
+              "voltage_pp_kV": 5.44836251268,
+              "n_files": 16.0
+            },
+            "115": {
+              "x": 6.1903776622910005,
+              "y": 672.9626719630162,
+              "voltage_pp_kV": 6.473748430575,
+              "n_files": 16.0
+            },
+            "40": {
+              "x": 1.800092910133,
+              "y": 133.45319522600295,
+              "voltage_pp_kV": 1.89492186563,
+              "n_files": 16.0
+            },
+            "60": {
+              "x": 2.6218079137280004,
+              "y": 201.26272532831678,
+              "voltage_pp_kV": 2.8428794956300005,
+              "n_files": 16.0
+            },
+            "75": {
+              "x": 3.285570738503,
+              "y": 249.4488146474936,
+              "voltage_pp_kV": 3.31732403111,
+              "n_files": 16.0
+            },
+            "90": {
+              "x": 4.011571043294,
+              "y": 390.5626738108173,
+              "voltage_pp_kV": 4.10687054774,
+              "n_files": 16.0
+            },
+            "MAX": {
+              "x": 7.346274814842001,
+              "y": 919.9656465393175,
+              "voltage_pp_kV": 7.74166547902,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": 78.25967799990683,
+            "intercept": -6.339835820744117,
+            "r_squared": 0.9987009177264472,
+            "n": 3
+          },
+          "on_qmax_fit": {
+            "slope": 173.78230016491895,
+            "intercept": -371.01501998993297,
+            "r_squared": 0.9778066821423755,
+            "n": 3
+          },
+          "Ccell_pF": 74.587342815373,
+          "Cd_effective_high_field_pF": 213.6894048325835,
+          "Cd_global_pF": 173.78230016491895,
+          "Cd_high_field_secant_pF": 213.6894048325835,
+          "gas_charge_correction_factor": 1.5362058745480325,
+          "model_identifiable": true
+        }
+      },
+      "interpretation": "The monitor route is absolute only if Channel D wiring/value is independently known and the passive Q-V check passes. Pearson KCL failure means Channel C cannot validate Channel D; it may include upstream parasitic current or incorrect termination/scaling. The current route is therefore a provisional fallback, not an independent absolute calibration."
+    },
+    "argon_only_4kHz": {
+      "condition": {
+        "material": "argon_only",
+        "burst_kHz": 4
+      },
+      "complete_scan": true,
+      "files_analyzed": 128,
+      "monitor_qv_passive_valid": false,
+      "monitor_kcl_with_pearson_valid": false,
+      "monitor_Cprime_pF": 4.0695563931543415,
+      "monitor_Closs_pF": -25.743714606249732,
+      "monitor_tan_delta": -6.3718370576707475,
+      "monitor_phase_abs_median_deg": 81.08056869797318,
+      "monitor_Cprime_relative_span": 0.1886260083465061,
+      "pearson_to_monitor_gain_ratio": 2.8167290622749097,
+      "pearson_to_monitor_phase_error_deg": 82.47818164539248,
+      "routes": {
+        "monitor": {
+          "level_medians": {
+            "100": {
+              "x": 1.5809880234800004,
+              "y": 110.54379999999999,
+              "voltage_pp_kV": 4.10704474237,
+              "n_files": 16.0
+            },
+            "105": {
+              "x": 1.6437824941300003,
+              "y": 116.07714179999999,
+              "voltage_pp_kV": 4.4232357023699995,
+              "n_files": 16.0
+            },
+            "115": {
+              "x": 3.444962249284,
+              "y": 214.8252968,
+              "voltage_pp_kV": 5.213035451330001,
+              "n_files": 16.0
+            },
+            "40": {
+              "x": -0.34680369685800005,
+              "y": 25.233759599999996,
+              "voltage_pp_kV": 1.57865156032,
+              "n_files": 16.0
+            },
+            "60": {
+              "x": -0.551848047028,
+              "y": 36.300442399999994,
+              "voltage_pp_kV": 2.5272244203200005,
+              "n_files": 16.0
+            },
+            "75": {
+              "x": -0.7255588960620001,
+              "y": 44.2052164,
+              "voltage_pp_kV": 3.15845490805,
+              "n_files": 16.0
+            },
+            "90": {
+              "x": -0.757075228,
+              "y": 53.690945199999994,
+              "voltage_pp_kV": 3.7907577803200003,
+              "n_files": 16.0
+            },
+            "MAX": {
+              "x": 5.910872418123001,
+              "y": 380.6902076,
+              "voltage_pp_kV": 9.952682523945,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": -50.20464395001923,
+            "intercept": 8.06550050719258,
+            "r_squared": 0.9976782551208635,
+            "n": 3
+          },
+          "on_qmax_fit": {
+            "slope": 62.32512910463991,
+            "intercept": 8.680028835197914,
+            "r_squared": 0.9968998776999695,
+            "n": 3
+          },
+          "Ccell_pF": 4.0695563931543415,
+          "Cd_effective_high_field_pF": 67.26316023024168,
+          "Cd_global_pF": 62.32512910463991,
+          "Cd_high_field_secant_pF": 67.26316023024168,
+          "gas_charge_correction_factor": 1.0643982325117212,
+          "model_identifiable": true
+        },
+        "current": {
+          "level_medians": {
+            "100": {
+              "x": 3.9173946438810003,
+              "y": 362.138454710335,
+              "voltage_pp_kV": 4.10704474237,
+              "n_files": 16.0
+            },
+            "105": {
+              "x": 4.2963424643709995,
+              "y": 402.0209737863053,
+              "voltage_pp_kV": 4.4232357023699995,
+              "n_files": 16.0
+            },
+            "115": {
+              "x": 5.118350057110001,
+              "y": 505.0627504944088,
+              "voltage_pp_kV": 5.213035451330001,
+              "n_files": 16.0
+            },
+            "40": {
+              "x": 1.578604316224,
+              "y": 120.10357111118158,
+              "voltage_pp_kV": 1.57865156032,
+              "n_files": 16.0
+            },
+            "60": {
+              "x": 2.464017878169,
+              "y": 182.66992652591534,
+              "voltage_pp_kV": 2.5272244203200005,
+              "n_files": 16.0
+            },
+            "75": {
+              "x": 3.095391730607,
+              "y": 230.03410405067598,
+              "voltage_pp_kV": 3.15845490805,
+              "n_files": 16.0
+            },
+            "90": {
+              "x": 3.7591309025750004,
+              "y": 276.5036731922467,
+              "voltage_pp_kV": 3.7907577803200003,
+              "n_files": 16.0
+            },
+            "MAX": {
+              "x": 9.731007665353001,
+              "y": 925.908270985484,
+              "voltage_pp_kV": 9.952682523945,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": 72.35885926744783,
+            "intercept": 5.4363522132048745,
+            "r_squared": 0.9997202716519535,
+            "n": 3
+          },
+          "on_qmax_fit": {
+            "slope": 94.6449589937047,
+            "intercept": 6.982662059176525,
+            "r_squared": 0.997890463733043,
+            "n": 3
+          },
+          "Ccell_pF": 73.87388276094487,
+          "Cd_effective_high_field_pF": 91.23710369029077,
+          "Cd_global_pF": 94.6449589937047,
+          "Cd_high_field_secant_pF": 91.23710369029077,
+          "gas_charge_correction_factor": 5.254618602248461,
+          "model_identifiable": true
+        }
+      },
+      "interpretation": "The monitor route is absolute only if Channel D wiring/value is independently known and the passive Q-V check passes. Pearson KCL failure means Channel C cannot validate Channel D; it may include upstream parasitic current or incorrect termination/scaling. The current route is therefore a provisional fallback, not an independent absolute calibration."
+    },
+    "argon_only_10kHz": {
+      "condition": {
+        "material": "argon_only",
+        "burst_kHz": 10
+      },
+      "complete_scan": true,
+      "files_analyzed": 128,
+      "monitor_qv_passive_valid": false,
+      "monitor_kcl_with_pearson_valid": false,
+      "monitor_Cprime_pF": 12.142792930493098,
+      "monitor_Closs_pF": -19.391762532284957,
+      "monitor_tan_delta": -1.6377559762943532,
+      "monitor_phase_abs_median_deg": 58.592112536853,
+      "monitor_Cprime_relative_span": 0.04803928949721874,
+      "pearson_to_monitor_gain_ratio": 3.2210560900272567,
+      "pearson_to_monitor_phase_error_deg": 59.16492952783034,
+      "routes": {
+        "monitor": {
+          "level_medians": {
+            "100": {
+              "x": 2.117351266658,
+              "y": 93.1840562,
+              "voltage_pp_kV": 4.10664351016244,
+              "n_files": 16.0
+            },
+            "105": {
+              "x": 1.991519217866,
+              "y": 115.28666439999998,
+              "voltage_pp_kV": 4.2650611746300005,
+              "n_files": 16.0
+            },
+            "115": {
+              "x": 3.4765824370380005,
+              "y": 192.6950043,
+              "voltage_pp_kV": 4.89738087124,
+              "n_files": 16.0
+            },
+            "40": {
+              "x": 0.632034881142,
+              "y": 26.814714199999997,
+              "voltage_pp_kV": 1.5793457780500002,
+              "n_files": 16.0
+            },
+            "60": {
+              "x": 0.8218126883280001,
+              "y": 34.7194876,
+              "voltage_pp_kV": 2.2111125080500003,
+              "n_files": 16.0
+            },
+            "75": {
+              "x": 1.23265610839,
+              "y": 44.2052164,
+              "voltage_pp_kV": 2.8430372835200006,
+              "n_files": 16.0
+            },
+            "90": {
+              "x": 1.074554409808,
+              "y": 47.367126,
+              "voltage_pp_kV": 3.4748039635200003,
+              "n_files": 16.0
+            },
+            "MAX": {
+              "x": 5.5475002479520015,
+              "y": 339.6284424,
+              "voltage_pp_kV": 10.111748881195002,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": 28.01219771353402,
+            "intercept": 10.161515339216466,
+            "r_squared": 0.9755690582512953,
+            "n": 3
+          },
+          "on_qmax_fit": {
+            "slope": 63.58697857441947,
+            "intercept": -17.612910360412855,
+            "r_squared": 0.9932555529823346,
+            "n": 3
+          },
+          "Ccell_pF": 12.142792930493098,
+          "Cd_effective_high_field_pF": 70.95087855521935,
+          "Cd_global_pF": 63.58697857441947,
+          "Cd_high_field_secant_pF": 70.95087855521935,
+          "gas_charge_correction_factor": 1.2064816904257054,
+          "model_identifiable": true
+        },
+        "current": {
+          "level_medians": {
+            "100": {
+              "x": 3.664875799711,
+              "y": 311.5826835829217,
+              "voltage_pp_kV": 4.10664351016244,
+              "n_files": 16.0
+            },
+            "105": {
+              "x": 4.075117510257,
+              "y": 354.50130812526896,
+              "voltage_pp_kV": 4.2650611746300005,
+              "n_files": 16.0
+            },
+            "115": {
+              "x": 4.834088578348,
+              "y": 456.26417015133654,
+              "voltage_pp_kV": 4.89738087124,
+              "n_files": 16.0
+            },
+            "40": {
+              "x": 1.5159812982240002,
+              "y": 112.22984546696316,
+              "voltage_pp_kV": 1.5793457780500002,
+              "n_files": 16.0
+            },
+            "60": {
+              "x": 2.211065202440001,
+              "y": 169.91911790345839,
+              "voltage_pp_kV": 2.2111125080500003,
+              "n_files": 16.0
+            },
+            "75": {
+              "x": 2.8428791880500004,
+              "y": 213.18809633099403,
+              "voltage_pp_kV": 2.8430372835200006,
+              "n_files": 16.0
+            },
+            "90": {
+              "x": 3.4431972486900007,
+              "y": 255.34682720901304,
+              "voltage_pp_kV": 3.4748039635200003,
+              "n_files": 16.0
+            },
+            "MAX": {
+              "x": 9.858481914754,
+              "y": 883.6440603474275,
+              "voltage_pp_kV": 10.111748881195002,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": 76.2009052136139,
+            "intercept": -1.7657416549223865,
+            "r_squared": 0.9970047097782405,
+            "n": 3
+          },
+          "on_qmax_fit": {
+            "slope": 89.16779292996786,
+            "intercept": 6.978740322092306,
+            "r_squared": 0.9962607301520962,
+            "n": 3
+          },
+          "Ccell_pF": 73.77466677865564,
+          "Cd_effective_high_field_pF": 85.0609937520935,
+          "Cd_global_pF": 89.16779292996786,
+          "Cd_high_field_secant_pF": 85.0609937520935,
+          "gas_charge_correction_factor": 7.5366409242159005,
+          "model_identifiable": true
+        }
+      },
+      "interpretation": "The monitor route is absolute only if Channel D wiring/value is independently known and the passive Q-V check passes. Pearson KCL failure means Channel C cannot validate Channel D; it may include upstream parasitic current or incorrect termination/scaling. The current route is therefore a provisional fallback, not an independent absolute calibration."
+    },
+    "argon_only_20kHz": {
+      "condition": {
+        "material": "argon_only",
+        "burst_kHz": 20
+      },
+      "complete_scan": true,
+      "files_analyzed": 128,
+      "monitor_qv_passive_valid": false,
+      "monitor_kcl_with_pearson_valid": false,
+      "monitor_Cprime_pF": 0.08209645773827315,
+      "monitor_Closs_pF": 21.765268541063744,
+      "monitor_tan_delta": 86.5563665133792,
+      "monitor_phase_abs_median_deg": 89.78603006038495,
+      "monitor_Cprime_relative_span": 3.04300278778935,
+      "pearson_to_monitor_gain_ratio": 3.3138377670840464,
+      "pearson_to_monitor_phase_error_deg": 89.75855247662955,
+      "routes": {
+        "monitor": {
+          "level_medians": {
+            "100": {
+              "x": 1.51751262826,
+              "y": 104.21998080000002,
+              "voltage_pp_kV": 3.9497222902599995,
+              "n_files": 16.0
+            },
+            "105": {
+              "x": 3.7441840709039997,
+              "y": 102.639026,
+              "voltage_pp_kV": 4.42262058237,
+              "n_files": 16.0
+            },
+            "115": {
+              "x": 1.7230594395760002,
+              "y": 134.25812200000001,
+              "voltage_pp_kV": 4.897143738,
+              "n_files": 16.0
+            },
+            "40": {
+              "x": -0.474079107782,
+              "y": 33.138532999999995,
+              "voltage_pp_kV": 1.73682607805,
+              "n_files": 16.0
+            },
+            "60": {
+              "x": 0.695454875938,
+              "y": 45.7861712,
+              "voltage_pp_kV": 2.52738251578,
+              "n_files": 16.0
+            },
+            "75": {
+              "x": -0.758803735774,
+              "y": 55.271899999999995,
+              "voltage_pp_kV": 3.1592282435199994,
+              "n_files": 16.0
+            },
+            "90": {
+              "x": 1.011767835932,
+              "y": 67.9195384,
+              "voltage_pp_kV": 3.7901426603200004,
+              "n_files": 16.0
+            },
+            "MAX": {
+              "x": 6.354505787710001,
+              "y": 518.1533026000001,
+              "voltage_pp_kV": 7.42779868408712,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": -1.4885389834254452,
+            "intercept": 44.465540573139144,
+            "r_squared": 0.010673246858338925,
+            "n": 3
+          },
+          "on_qmax_fit": {
+            "slope": 86.51606077141358,
+            "intercept": -89.24024336887389,
+            "r_squared": 0.754245116181181,
+            "n": 3
+          },
+          "Ccell_pF": 0.08209645773827315,
+          "Cd_effective_high_field_pF": 82.88883250362397,
+          "Cd_global_pF": 86.51606077141358,
+          "Cd_high_field_secant_pF": 82.88883250362397,
+          "gas_charge_correction_factor": 1.0009914224573806,
+          "model_identifiable": false
+        },
+        "current": {
+          "level_medians": {
+            "100": {
+              "x": 3.949248557484,
+              "y": 383.6532919153589,
+              "voltage_pp_kV": 3.9497222902599995,
+              "n_files": 16.0
+            },
+            "105": {
+              "x": 4.249076404242,
+              "y": 409.64024733883656,
+              "voltage_pp_kV": 4.42262058237,
+              "n_files": 16.0
+            },
+            "115": {
+              "x": 4.801915453766,
+              "y": 460.88512246071014,
+              "voltage_pp_kV": 4.897143738,
+              "n_files": 16.0
+            },
+            "40": {
+              "x": 1.6107155462240004,
+              "y": 122.65417203866309,
+              "voltage_pp_kV": 1.73682607805,
+              "n_files": 16.0
+            },
+            "60": {
+              "x": 2.527240229866,
+              "y": 185.88665711200005,
+              "voltage_pp_kV": 2.52738251578,
+              "n_files": 16.0
+            },
+            "75": {
+              "x": 3.1590385289580003,
+              "y": 233.67480566299866,
+              "voltage_pp_kV": 3.1592282435199994,
+              "n_files": 16.0
+            },
+            "90": {
+              "x": 3.6327099719890006,
+              "y": 275.9353286733067,
+              "voltage_pp_kV": 3.7901426603200004,
+              "n_files": 16.0
+            },
+            "MAX": {
+              "x": 6.98630076691,
+              "y": 907.069067270135,
+              "voltage_pp_kV": 7.42779868408712,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": 71.50916317678923,
+            "intercept": 6.804559451294203,
+            "r_squared": 0.9993432386583513,
+            "n": 3
+          },
+          "on_qmax_fit": {
+            "slope": 188.11642669790794,
+            "intercept": -413.0945818128684,
+            "r_squared": 0.9903541140323479,
+            "n": 3
+          },
+          "Ccell_pF": 73.90594656053577,
+          "Cd_effective_high_field_pF": 204.2606412543716,
+          "Cd_global_pF": 188.11642669790794,
+          "Cd_high_field_secant_pF": 204.2606412543716,
+          "gas_charge_correction_factor": 1.5669603747998393,
+          "model_identifiable": true
+        }
+      },
+      "interpretation": "The monitor route is absolute only if Channel D wiring/value is independently known and the passive Q-V check passes. Pearson KCL failure means Channel C cannot validate Channel D; it may include upstream parasitic current or incorrect termination/scaling. The current route is therefore a provisional fallback, not an independent absolute calibration."
+    },
+    "pure_water_4kHz": {
+      "condition": {
+        "material": "pure_water",
+        "burst_kHz": 4
+      },
+      "complete_scan": true,
+      "files_analyzed": 128,
+      "monitor_qv_passive_valid": false,
+      "monitor_kcl_with_pearson_valid": false,
+      "monitor_Cprime_pF": 19.49092706951825,
+      "monitor_Closs_pF": -4.391202150105835,
+      "monitor_tan_delta": -0.22820676850270366,
+      "monitor_phase_abs_median_deg": 12.855143209039682,
+      "monitor_Cprime_relative_span": 0.024800679818542348,
+      "pearson_to_monitor_gain_ratio": 3.6876102775376163,
+      "pearson_to_monitor_phase_error_deg": 14.113065757141442,
+      "routes": {
+        "monitor": {
+          "level_medians": {
+            "100": {
+              "x": 2.5751530655590003,
+              "y": 99.501724,
+              "voltage_pp_kV": 5.291630675806941,
+              "n_files": 16.0
+            },
+            "105": {
+              "x": 3.112289865018,
+              "y": 123.9788382,
+              "voltage_pp_kV": 5.68669000463,
+              "n_files": 16.0
+            },
+            "115": {
+              "x": 4.439498905003,
+              "y": 146.10912989999997,
+              "voltage_pp_kV": 6.47671050011,
+              "n_files": 16.0
+            },
+            "40": {
+              "x": 1.7843970049720002,
+              "y": 36.3004426,
+              "voltage_pp_kV": 1.8950796435200001,
+              "n_files": 16.0
+            },
+            "60": {
+              "x": 2.654080233452,
+              "y": 52.109990399999994,
+              "voltage_pp_kV": 2.843810619,
+              "n_files": 16.0
+            },
+            "75": {
+              "x": 3.2854258644180003,
+              "y": 62.38619659999999,
+              "voltage_pp_kV": 3.47504110674,
+              "n_files": 16.0
+            },
+            "90": {
+              "x": -1.041314065486,
+              "y": 63.17667399999999,
+              "voltage_pp_kV": 4.422603628049999,
+              "n_files": 16.0
+            },
+            "MAX": {
+              "x": -4.363351366732,
+              "y": 409.1412428,
+              "voltage_pp_kV": 9.794807199080001,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": 17.42723472353595,
+            "intercept": 5.39678574830828,
+            "r_squared": 0.999073472067069,
+            "n": 3
+          },
+          "on_qmax_fit": {
+            "slope": -32.69154198772041,
+            "intercept": 261.15471538161347,
+            "r_squared": 0.9565048150539507,
+            "n": 3
+          },
+          "Ccell_pF": 19.49092706951825,
+          "Cd_effective_high_field_pF": -29.88033475300241,
+          "Cd_global_pF": -32.69154198772041,
+          "Cd_high_field_secant_pF": -29.88033475300241,
+          "gas_charge_correction_factor": null,
+          "model_identifiable": false
+        },
+        "current": {
+          "level_medians": {
+            "100": {
+              "x": 5.275460264901,
+              "y": 397.12918470546083,
+              "voltage_pp_kV": 5.291630675806941,
+              "n_files": 16.0
+            },
+            "105": {
+              "x": 5.686389930807,
+              "y": 429.6178055663115,
+              "voltage_pp_kV": 5.68669000463,
+              "n_files": 16.0
+            },
+            "115": {
+              "x": 6.413195808332,
+              "y": 487.20819605189115,
+              "voltage_pp_kV": 6.47671050011,
+              "n_files": 16.0
+            },
+            "40": {
+              "x": 1.8950005957860003,
+              "y": 138.6939931666085,
+              "voltage_pp_kV": 1.8950796435200001,
+              "n_files": 16.0
+            },
+            "60": {
+              "x": 2.8437236664869996,
+              "y": 208.07305778858148,
+              "voltage_pp_kV": 2.843810619,
+              "n_files": 16.0
+            },
+            "75": {
+              "x": 3.4749936780960002,
+              "y": 259.3163596092968,
+              "voltage_pp_kV": 3.47504110674,
+              "n_files": 16.0
+            },
+            "90": {
+              "x": 4.422442837127,
+              "y": 327.50011422212174,
+              "voltage_pp_kV": 4.422603628049999,
+              "n_files": 16.0
+            },
+            "MAX": {
+              "x": 9.668489053569001,
+              "y": 910.4334493099041,
+              "voltage_pp_kV": 9.794807199080001,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": 76.08847815122235,
+            "intercept": -6.295295827194431,
+            "r_squared": 0.9991652017144144,
+            "n": 3
+          },
+          "on_qmax_fit": {
+            "slope": 123.57121511268055,
+            "intercept": -287.549333956844,
+            "r_squared": 0.996120850035009,
+            "n": 3
+          },
+          "Ccell_pF": 74.2190868708617,
+          "Cd_effective_high_field_pF": 130.01140646153988,
+          "Cd_global_pF": 123.57121511268055,
+          "Cd_high_field_secant_pF": 130.01140646153988,
+          "gas_charge_correction_factor": 2.3302742638300753,
+          "model_identifiable": true
+        }
+      },
+      "interpretation": "The monitor route is absolute only if Channel D wiring/value is independently known and the passive Q-V check passes. Pearson KCL failure means Channel C cannot validate Channel D; it may include upstream parasitic current or incorrect termination/scaling. The current route is therefore a provisional fallback, not an independent absolute calibration."
+    },
+    "pure_water_10kHz": {
+      "condition": {
+        "material": "pure_water",
+        "burst_kHz": 10
+      },
+      "complete_scan": false,
+      "files_analyzed": 32,
+      "monitor_qv_passive_valid": false,
+      "monitor_kcl_with_pearson_valid": false,
+      "monitor_Cprime_pF": null,
+      "monitor_Closs_pF": null,
+      "monitor_tan_delta": null,
+      "monitor_phase_abs_median_deg": null,
+      "monitor_Cprime_relative_span": null,
+      "pearson_to_monitor_gain_ratio": null,
+      "pearson_to_monitor_phase_error_deg": null,
+      "routes": {
+        "monitor": {
+          "level_medians": {
+            "100": {
+              "x": 2.2091907323000006,
+              "y": 140.5819412,
+              "voltage_pp_kV": 5.52772604226,
+              "n_files": 16.0
+            },
+            "MAX": {
+              "x": -4.299666154004,
+              "y": 379.90895279999995,
+              "voltage_pp_kV": 9.163017839520002,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 0
+          },
+          "on_qmax_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 1
+          },
+          "Ccell_pF": null,
+          "Cd_effective_high_field_pF": null,
+          "Cd_global_pF": null,
+          "Cd_high_field_secant_pF": null,
+          "gas_charge_correction_factor": null,
+          "model_identifiable": false
+        },
+        "current": {
+          "level_medians": {
+            "100": {
+              "x": 5.370135196945,
+              "y": 398.29053369701876,
+              "voltage_pp_kV": 5.52772604226,
+              "n_files": 16.0
+            },
+            "MAX": {
+              "x": 8.98925465708,
+              "y": 825.5163798763471,
+              "voltage_pp_kV": 9.163017839520002,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 0
+          },
+          "on_qmax_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 1
+          },
+          "Ccell_pF": null,
+          "Cd_effective_high_field_pF": null,
+          "Cd_global_pF": null,
+          "Cd_high_field_secant_pF": null,
+          "gas_charge_correction_factor": null,
+          "model_identifiable": false
+        }
+      },
+      "interpretation": "The monitor route is absolute only if Channel D wiring/value is independently known and the passive Q-V check passes. Pearson KCL failure means Channel C cannot validate Channel D; it may include upstream parasitic current or incorrect termination/scaling. The current route is therefore a provisional fallback, not an independent absolute calibration."
+    },
+    "pure_water_20kHz": {
+      "condition": {
+        "material": "pure_water",
+        "burst_kHz": 20
+      },
+      "complete_scan": false,
+      "files_analyzed": 16,
+      "monitor_qv_passive_valid": false,
+      "monitor_kcl_with_pearson_valid": false,
+      "monitor_Cprime_pF": null,
+      "monitor_Closs_pF": null,
+      "monitor_tan_delta": null,
+      "monitor_phase_abs_median_deg": null,
+      "monitor_Cprime_relative_span": null,
+      "pearson_to_monitor_gain_ratio": null,
+      "pearson_to_monitor_phase_error_deg": null,
+      "routes": {
+        "monitor": {
+          "level_medians": {
+            "MAX": {
+              "x": -0.2725586891520002,
+              "y": 399.67089439999995,
+              "voltage_pp_kV": 10.268241803475,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 0
+          },
+          "on_qmax_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 1
+          },
+          "Ccell_pF": null,
+          "Cd_effective_high_field_pF": null,
+          "Cd_global_pF": null,
+          "Cd_high_field_secant_pF": null,
+          "gas_charge_correction_factor": null,
+          "model_identifiable": false
+        },
+        "current": {
+          "level_medians": {
+            "MAX": {
+              "x": 10.030537834463,
+              "y": 950.532035610701,
+              "voltage_pp_kV": 10.268241803475,
+              "n_files": 16.0
+            }
+          },
+          "off_qpp_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 0
+          },
+          "on_qmax_fit": {
+            "slope": null,
+            "intercept": null,
+            "r_squared": null,
+            "n": 1
+          },
+          "Ccell_pF": null,
+          "Cd_effective_high_field_pF": null,
+          "Cd_global_pF": null,
+          "Cd_high_field_secant_pF": null,
+          "gas_charge_correction_factor": null,
+          "model_identifiable": false
+        }
+      },
+      "interpretation": "The monitor route is absolute only if Channel D wiring/value is independently known and the passive Q-V check passes. Pearson KCL failure means Channel C cannot validate Channel D; it may include upstream parasitic current or incorrect termination/scaling. The current route is therefore a provisional fallback, not an independent absolute calibration."
+    }
+  },
+  "passive_lobe_models": {
+    "5mM_Mn_nitrate_in_water_20kHz": {
+      "monitor": {
+        "negative_nC_per_kV": 43.95648369446392,
+        "negative_MAD_nC_per_kV": 3.3039224338201234,
+        "positive_nC_per_kV": 54.58343478654345,
+        "positive_MAD_nC_per_kV": 14.792609870469615
+      },
+      "current": {
+        "negative_nC_per_kV": -135.33690917404252,
+        "negative_MAD_nC_per_kV": 138.34000335896857,
+        "positive_nC_per_kV": 149.58380112670966,
+        "positive_MAD_nC_per_kV": 134.20546765514516
+      }
+    },
+    "BMIM_nitrate_20kHz": {
+      "monitor": {
+        "negative_nC_per_kV": 33.2556075166592,
+        "negative_MAD_nC_per_kV": 0.09462349049692872,
+        "positive_nC_per_kV": 49.31830159800052,
+        "positive_MAD_nC_per_kV": 5.334141918153403
+      },
+      "current": {
+        "negative_nC_per_kV": 152.77730578597334,
+        "negative_MAD_nC_per_kV": 29.40273544289224,
+        "positive_nC_per_kV": -44.40213932852842,
+        "positive_MAD_nC_per_kV": 178.55409145278566
+      }
+    },
+    "argon_only_4kHz": {
+      "monitor": {
+        "negative_nC_per_kV": -42.785517742066006,
+        "negative_MAD_nC_per_kV": 0.380111119834817,
+        "positive_nC_per_kV": -50.61001168259786,
+        "positive_MAD_nC_per_kV": 13.618615934352169
+      },
+      "current": {
+        "negative_nC_per_kV": 10.164065650575463,
+        "negative_MAD_nC_per_kV": 3.458020337504113,
+        "positive_nC_per_kV": -6.444109358270169,
+        "positive_MAD_nC_per_kV": 2.0653302652188943
+      }
+    },
+    "argon_only_10kHz": {
+      "monitor": {
+        "negative_nC_per_kV": -29.954232543935884,
+        "negative_MAD_nC_per_kV": 13.762022463617962,
+        "positive_nC_per_kV": -21.396573495951642,
+        "positive_MAD_nC_per_kV": 0.023315525361853967
+      },
+      "current": {
+        "negative_nC_per_kV": -118.48380161086226,
+        "negative_MAD_nC_per_kV": 72.65571779359244,
+        "positive_nC_per_kV": 104.57810372367766,
+        "positive_MAD_nC_per_kV": 12.10285104504601
+      }
+    },
+    "argon_only_20kHz": {
+      "monitor": {
+        "negative_nC_per_kV": 15.529656504981869,
+        "negative_MAD_nC_per_kV": 32.6871654133556,
+        "positive_nC_per_kV": 35.34330482515166,
+        "positive_MAD_nC_per_kV": 28.290616658592793
+      },
+      "current": {
+        "negative_nC_per_kV": -115.34144943890547,
+        "negative_MAD_nC_per_kV": 35.463501519751375,
+        "positive_nC_per_kV": 119.62459764441783,
+        "positive_MAD_nC_per_kV": 20.463447690473306
+      }
+    },
+    "pure_water_4kHz": {
+      "monitor": {
+        "negative_nC_per_kV": 0.0,
+        "negative_MAD_nC_per_kV": 0.0,
+        "positive_nC_per_kV": 0.0,
+        "positive_MAD_nC_per_kV": 0.0
+      },
+      "current": {
+        "negative_nC_per_kV": 34.730203150731015,
+        "negative_MAD_nC_per_kV": 16.822861232910757,
+        "positive_nC_per_kV": -31.253300669704476,
+        "positive_MAD_nC_per_kV": 6.156222473956057
+      }
+    }
+  },
+  "method_limits": [
+    "Channel-D charge scales linearly with the assumed reference capacitance; its tolerance was not supplied.",
+    "Pearson current is not a valid independent charge calibration unless its termination, scale, and current path are established.",
+    "Negative charge is electrons plus negative ions; species are not electrically separable here.",
+    "The p95 half-cycle-average rate is not an instantaneous nanosecond microdischarge peak.",
+    "Missing-frequency results transfer a same-material effective model and are explicitly flagged.",
+    "No retained surface charge is reported without quiet pre- and post-burst windows."
+  ]
+}

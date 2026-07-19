@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Read the CSV file, skipping the first row (units)
-df = pd.read_csv(r"C:\Users\isaac\OneDrive\Documents\McGill\McGill Experiments\waveforms\March 2026\testarbitrarilychosenfordatamanipulation.csv", skiprows=1)
+df = pd.read_csv(r"C:\Users\isaac\OneDrive\Documents\McGill\McGill Experiments\waveforms\March 2026\3_23\ionic liquid metal salt dbd\20kHz_35.csv", skiprows=1)
 
 # Rename columns for clarity
 df.columns = ['Time (ms)', 'Voltage (V)', 'Current (mA)']
@@ -53,7 +53,7 @@ plt.xlabel('Frequency (Hz)')
 plt.ylabel('Magnitude (V)')
 plt.title('FFT of Voltage Spectrum')
 plt.grid(True)
-#plt.xlim(0, fs / 2)  # Up to Nyquist frequency
-plt.xlim(0,2e5)
+plt.xlim(0, fs / 2)  # Up to Nyquist frequency
+#plt.xlim(0,2e5)
 
 plt.show()

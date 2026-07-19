@@ -1,4 +1,5 @@
 import unittest
+from types import SimpleNamespace
 
 import numpy as np
 
@@ -6,9 +7,13 @@ from DBD_Surface_Charge_Analysis import (
     CalibrationModel,
     FileObservation,
     LobeObservation,
+    active_cd_three_level_fit,
+    apparent_power_from_burst_energy_mW,
     bootstrap_median_draws,
+    complex_capacitance_least_squares,
     extract_lobes,
     geometry_cd_pF,
+    lissajous_burst_periods,
     locked_condition_sign,
     per_file_metrics,
     quiet_edge_charge,
@@ -124,12 +129,138 @@ class SignAndExtractionTests(unittest.TestCase):
 
 
 class MetricTests(unittest.TestCase):
+    def test_burst_energy_to_power_conversion(self):
+        self.assertAlmostEqual(
+            apparent_power_from_burst_energy_mW(10.0, 20_000.0),
+            200.0,
+        )
+
+    def test_complex_capacitance_fit_recovers_quantized_passive_waveform(self):
+        carrier_hz = 100_000.0
+        sample_hz = 10_000_000.0
+        time_s = np.arange(0.0, 2.0e-3, 1.0 / sample_hz)
+        phase = 2.0 * np.pi * carrier_hz * time_s
+        voltage_amplitude_v = 2_000.0
+        expected_cprime_f = 25.0e-12
+        expected_closs_f = 6.0e-12
+
+        voltage_v = voltage_amplitude_v * np.sin(phase)
+        charge_c = (
+            expected_cprime_f * voltage_v
+            - expected_closs_f * voltage_amplitude_v * np.cos(phase)
+            + 2.0e-9
+            + 4.0e-9 * (time_s - np.mean(time_s)) / np.ptp(time_s)
+        )
+
+        # Deliberately coarsen both channels to reproduce the ADC-code grid
+        # that makes endpoint/lobe slopes quantization-locked.
+        voltage_v = np.round(voltage_v / 157.0) * 157.0
+        charge_c = np.round(charge_c / 7.874e-9) * 7.874e-9
+
+        capacitance, _, residual_rms_n_c, signal_pp_n_c = (
+            complex_capacitance_least_squares(
+                time_s, voltage_v, charge_c, carrier_hz
+            )
+        )
+
+        self.assertIsNotNone(capacitance)
+        self.assertAlmostEqual(capacitance.real * 1.0e12, 25.0, delta=0.75)
+        self.assertAlmostEqual(-capacitance.imag * 1.0e12, 6.0, delta=0.50)
+        self.assertGreater(signal_pp_n_c, 90.0)
+        self.assertLess(residual_rms_n_c, 0.5 * 7.874)
+
+    def test_lissajous_energy_matches_ellipse_and_is_orientation_invariant(self):
+        count = 8_192
+        period_s = 50.0e-6
+        phase = np.linspace(0.0, 2.0 * np.pi, count, endpoint=False)
+        time_s = phase * period_s / (2.0 * np.pi)
+        voltage_amplitude_kv = 2.0
+        charge_amplitude_nc = 10.0
+        phase_lag = 0.35
+        voltage_v = 1.0e3 * voltage_amplitude_kv * np.cos(phase)
+        charge_c = (
+            charge_amplitude_nc
+            * 1.0e-9
+            * np.cos(phase - phase_lag)
+        )
+        expected_u_j = (
+            np.pi
+            * voltage_amplitude_kv
+            * charge_amplitude_nc
+            * abs(np.sin(phase_lag))
+        )
+
+        forward = lissajous_burst_periods(
+            time_s, voltage_v, charge_c, [slice(None)], None
+        )[0]
+        reversed_path = lissajous_burst_periods(
+            time_s, voltage_v[::-1], charge_c[::-1], [slice(None)], None
+        )[0]
+        opposite_charge = lissajous_burst_periods(
+            time_s, voltage_v, -charge_c, [slice(None)], None
+        )[0]
+
+        self.assertAlmostEqual(forward.energy_uJ, expected_u_j, delta=0.01)
+        self.assertAlmostEqual(reversed_path.energy_uJ, forward.energy_uJ, places=10)
+        self.assertAlmostEqual(opposite_charge.energy_uJ, forward.energy_uJ, places=10)
+        self.assertAlmostEqual(
+            reversed_path.signed_energy_uJ, -forward.signed_energy_uJ, places=10
+        )
+        self.assertAlmostEqual(
+            opposite_charge.signed_energy_uJ, -forward.signed_energy_uJ, places=10
+        )
+
+    def test_in_phase_qv_trace_has_negligible_enclosed_energy(self):
+        count = 4_096
+        phase = np.linspace(0.0, 2.0 * np.pi, count, endpoint=False)
+        time_s = phase * 50.0e-6 / (2.0 * np.pi)
+        voltage_v = 2_000.0 * np.cos(phase)
+        charge_c = 10.0e-9 * np.cos(phase)
+
+        result = lissajous_burst_periods(
+            time_s, voltage_v, charge_c, [slice(None)], None
+        )[0]
+
+        self.assertLess(result.energy_uJ, 1.0e-10)
+
     def test_per_file_metrics_subtract_passive_charge_before_model_factor(self):
         lobes = [
-            LobeObservation(0, -1, 1.0, 4.0e-6, 1e-5, 12.0),
-            LobeObservation(0, 1, 1.0, 4.0e-6, 2e-5, 7.0),
-            LobeObservation(1, -1, 2.0, 4.0e-6, 3e-5, 24.0),
-            LobeObservation(1, 1, 2.0, 4.0e-6, 4e-5, 14.0),
+            LobeObservation(
+                0,
+                -1,
+                1.0,
+                4.0e-6,
+                1e-5,
+                12.0,
+                background_cprime_basis_nC_per_pF=2.0 / 25.0,
+            ),
+            LobeObservation(
+                0,
+                1,
+                1.0,
+                4.0e-6,
+                2e-5,
+                7.0,
+                background_cprime_basis_nC_per_pF=2.0 / 25.0,
+            ),
+            LobeObservation(
+                1,
+                -1,
+                2.0,
+                4.0e-6,
+                3e-5,
+                24.0,
+                background_cprime_basis_nC_per_pF=4.0 / 25.0,
+            ),
+            LobeObservation(
+                1,
+                1,
+                2.0,
+                4.0e-6,
+                4e-5,
+                14.0,
+                background_cprime_basis_nC_per_pF=4.0 / 25.0,
+            ),
         ]
         metrics = per_file_metrics(observation("MAX", lobes=lobes), calibration(), 2.0, True)
         self.assertAlmostEqual(metrics["negative_record_total_nC"], 60.0)
@@ -165,6 +296,59 @@ class MetricTests(unittest.TestCase):
         self.assertGreater(low, 0.0)
         self.assertGreater(high, low)
         self.assertEqual(physical, 1.0)
+
+    def test_three_level_active_cd_fit_passes_consistent_provisional_scan(self):
+        rows = []
+        centers = {100: 2.54, 105: 3.22, 115: 4.00}
+        capture = 0
+        for level, center in centers.items():
+            for offset in (-0.02, -0.01, 0.0, 0.01, 0.02):
+                capture += 1
+                x = center + offset
+                lobe = LobeObservation(
+                    0,
+                    -1,
+                    x / 2.0,
+                    4.0e-6,
+                    1.0e-5,
+                    20.0,
+                    0.0,
+                    0.0,
+                )
+                rows.append(
+                    observation(
+                        str(level),
+                        lobes=[lobe],
+                        capture=capture,
+                        x=x,
+                        y=214.0 * x - 392.0,
+                    )
+                )
+        args = SimpleNamespace(
+            bootstrap_replicates=200,
+            bootstrap_block_files=1,
+            active_cd_min_clean_captures=4,
+            active_cd_min_r_squared=0.98,
+            active_cd_max_pairwise_relative_span=0.35,
+            active_cd_min_breakdown_active_fraction=0.50,
+        )
+        result = active_cd_three_level_fit(
+            rows,
+            sign=1,
+            cprime_pF=28.0,
+            cprime_draws=np.full(200, 28.0),
+            closs_pF=5.0,
+            passive_threshold_nC={-1: 1.0, 1: 1.0},
+            args=args,
+            rng=np.random.default_rng(11),
+        )
+        self.assertEqual(
+            result["status"],
+            "supported_provisional_three_level_effective_Cd",
+        )
+        self.assertAlmostEqual(result["slope_pF"], 214.0, delta=0.5)
+        self.assertGreater(result["r_squared"], 0.999)
+        self.assertEqual(result["physical_fraction"], 1.0)
 
 
 class UncertaintyTests(unittest.TestCase):

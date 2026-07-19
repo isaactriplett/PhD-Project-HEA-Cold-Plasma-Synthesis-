@@ -10,15 +10,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Read the CSV file, skipping the first row (units)
-df = pd.read_csv(r"C:\Users\isaac\OneDrive\Documents\McGill\McGill Experiments\waveforms\March 2026\3_23\ionic liquid metal salt dbd\4kHz1_42.csv", skiprows=1)
+df = pd.read_csv(r"C:\Users\isaac\OneDrive\Documents\McGill\McGill Experiments\waveforms\June 2026\6_1\40 kHz\Cobalt no dielectric\Cobalt no dielectric_14.csv", skiprows=1)
 
 # Rename columns for clarity
-df.columns = ['Time (ms)', 'Voltage (V)', 'Current (mA)']
+df.columns = ['Time (ms)', 'Voltage (V)', 'Current (A)']
 
 # Convert columns to numeric types
 df['Time (ms)'] = pd.to_numeric(df['Time (ms)'], errors='coerce')
 df['Voltage (V)'] = pd.to_numeric(df['Voltage (V)'], errors='coerce')
-df['Current (mA)'] = pd.to_numeric(df['Current (mA)'], errors='coerce')
+df['Current (A)'] = pd.to_numeric(df['Current (A)'], errors='coerce')
 
 # Drop any rows with NaN values
 df = df.dropna()
@@ -26,8 +26,8 @@ df = df.dropna()
 # Sort by time to ensure order
 df = df.sort_values('Time (ms)')
 time = (df['Time (ms)'].values)/1000
-voltage = df['Voltage (V)'].values
-current = (df['Current (mA)'].values)/1000
+voltage = (df['Voltage (V)'].values)*1000
+current = (df['Current (A)'].values)
 
 # Compute the first derivative of voltage with respect to time
 #deriv = np.gradient(voltage, time)
@@ -59,7 +59,7 @@ plt.ylabel('Power (W)')
 plt.title('Power Waveform')
 plt.grid(True)
 
-plt.xlim(0.00015,0.0002)
+plt.xlim(0.000,0.0002)
 
 plt.show()
 

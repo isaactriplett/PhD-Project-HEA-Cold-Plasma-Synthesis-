@@ -1,0 +1,13 @@
+medium,burst_label_kHz,files_analyzed,negative_charge_per_half_cycle_median_nC,negative_charge_per_half_cycle_p95_nC,negative_record_average_equivalent_rate_per_s,negative_half_cycle_average_equivalent_rate_p95_per_s,positive_charge_per_half_cycle_median_nC,positive_charge_per_half_cycle_p95_nC,positive_record_average_equivalent_rate_per_s,positive_half_cycle_average_equivalent_rate_p95_per_s,current_multiplier_all_records,retained_charge_records_available,analysis_version,interpretation
+argon_only,4,64,55.305,229.86,5.404e16,3.411e17,53.362,220.34,5.694e16,3.356e17,-1,0,1.3,apparent_external_terminal_not_background_subtracted
+argon_only,10,64,86.870,236.56,9.192e16,3.578e17,94.734,270.00,9.185e16,4.094e17,-1,0,1.3,apparent_external_terminal_not_background_subtracted
+argon_only,20,64,114.445,313.63,5.149e16,4.442e17,7.9048,305.00,4.619e16,3.566e17,-1,0,1.3,apparent_external_terminal_not_background_subtracted
+BMIM_nitrate,4,64,23.6528,395.38,2.186e16,4.975e17,84.2389,378.79,1.774e16,4.984e17,-1,0,1.3,apparent_external_terminal_not_background_subtracted
+BMIM_nitrate,10,64,71.02,405.10,4.310e16,5.357e17,59.15,404.85,3.986e16,5.280e17,-1,0,1.3,apparent_external_terminal_not_background_subtracted
+BMIM_nitrate,20,64,177.59,465.78,8.669e16,6.476e17,83.43,389.14,9.817e16,4.814e17,-1,0,1.3,apparent_external_terminal_not_background_subtracted
+5mM_Mn_nitrate_in_water,4,64,23.653,327.86,2.518e16,4.283e17,81.124,404.04,2.081e16,5.548e17,-1,0,1.3,apparent_external_terminal_not_background_subtracted
+5mM_Mn_nitrate_in_water,10,64,55.272,219.86,3.682e16,2.920e17,63.177,291.62,3.299e16,3.946e17,-1,0,1.3,apparent_external_terminal_not_background_subtracted
+5mM_Mn_nitrate_in_water,20,64,221.12,406.3,8.903e16,5.729e17,101.23,387.2,1.044e17,4.871e17,-1,0,1.3,apparent_external_terminal_not_background_subtracted
+pure_water,4,64,55.25,301.5,6.142e16,4.475e17,63.18,243.2,5.762e16,3.792e17,-1,0,1.3,apparent_external_terminal_not_background_subtracted
+pure_water,10,64,102.64,291.6,9.940e16,4.496e17,102.64,348.9,1.038e17,5.246e17,-1,0,1.3,apparent_external_terminal_not_background_subtracted
+pure_water,20,64,173.52,347.9,1.427e17,5.598e17,160.30,381.2,1.413e17,5.337e17,-1,0,1.3,apparent_external_terminal_not_background_subtracted

@@ -45,8 +45,19 @@ from typing import Iterable, Sequence
 import matplotlib.pyplot as plt
 import numpy as np
 
+from dbd_surface_charge_figures import (
+    build_capture_balanced_binned,
+    build_dose_clock_rows,
+    build_stationarity_metrics,
+    plot_binned_facet,
+    plot_dose_clock,
+    plot_duty_audit,
+    plot_power_audit,
+)
+
 from Lissajous_Figures import (
     AnalysisError as WaveformAnalysisError,
+    duty_activity_mask,
     select_two_duty_cycles,
 )
 from Lissajous_Scan_Analysis import (
@@ -70,11 +81,12 @@ from Lissajous_Scan_Analysis import (
 )
 
 
-ANALYSIS_VERSION = "1.0-surface-charge"
+ANALYSIS_VERSION = "2.0-surface-charge-power"
 LEVELS = (40, 60, 75, 90, 100, 105, 115)
 SCAN_FIT_LEVELS = (40, 60, 75)
-TRANSITION_LEVELS = (90, 100)
+TRANSITION_LEVELS = (90,)
 HIGH_FIELD_LEVELS = (105, 115)
+ACTIVE_CD_LEVELS = (100, 105, 115)
 COLORS = {
     "negative": "#2864b7",
     "positive": "#d15b35",
@@ -97,6 +109,22 @@ class LobeObservation:
     duration_s: float
     midpoint_s: float
     raw_directed_charge_nC: float
+    background_cprime_basis_nC_per_pF: float = 0.0
+    background_closs_basis_nC_per_pF: float = 0.0
+
+
+@dataclass(frozen=True)
+class BurstPeriodObservation:
+    burst_index: int
+    start_s: float
+    stop_s: float
+    midpoint_s: float
+    signed_energy_uJ: float
+    energy_uJ: float
+    duty_on_fraction: float | None
+    closure_delta_V_kV: float
+    closure_delta_Q_nC: float
+    closure_contribution_fraction: float | None
 
 
 @dataclass
@@ -121,6 +149,17 @@ class FileObservation:
     quiet_edge_status: str
     qv_voltage_kV: np.ndarray = field(repr=False)
     qv_charge_raw_nC: np.ndarray = field(repr=False)
+    complex_fit_residual_rms_nC: float | None = None
+    complex_fit_signal_codes: float | None = None
+    voltage_clipping_flag: bool = False
+    current_clipping_flag: bool = False
+    monitor_clipping_flag: bool = False
+    duty_on_fraction: float | None = None
+    duty_envelope_contrast: float | None = None
+    burst_energy_uJ: list[float] = field(default_factory=list, repr=False)
+    burst_periods: list[BurstPeriodObservation] = field(default_factory=list, repr=False)
+    burst_energy_median_uJ: float | None = None
+    apparent_power_mW: float | None = None
 
 
 @dataclass
@@ -157,6 +196,24 @@ class CalibrationModel:
     factor_source: str
     evidence_tier: str
     failed_gates: list[str]
+    background_status: str = "failed_empirical_background_validation"
+    background_failed_gates: list[str] = field(default_factory=list)
+    scan_cd_intercept_nC: float | None = None
+    scan_cd_r_squared: float | None = None
+    scan_cd_levels: str = ""
+    scan_cd_pairwise_relative_span: float | None = None
+    scan_cd_breakdown_active_fraction: float | None = None
+    scan_cd_clean_counts: str = ""
+    scan_cd_bootstrap_pF: np.ndarray = field(
+        default_factory=lambda: np.asarray([], dtype=float), repr=False
+    )
+    geometry_only_factor: float | None = None
+    geometry_only_factor_low: float | None = None
+    geometry_only_factor_high: float | None = None
+    scan_cd_charge_factor_status: str = "not_available"
+    scan_based_factor_diagnostic: float | None = None
+    scan_based_factor_diagnostic_low: float | None = None
+    scan_based_factor_diagnostic_high: float | None = None
 
 
 def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -208,6 +265,13 @@ def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--glass-thickness-relative-range", type=float, default=0.10)
     parser.add_argument("--pyrex-epsilon-min", type=float, default=4.0)
     parser.add_argument("--pyrex-epsilon-max", type=float, default=5.0)
+    parser.add_argument("--active-cd-min-r-squared", type=float, default=0.98)
+    parser.add_argument("--active-cd-min-clean-captures", type=int, default=4)
+    parser.add_argument("--active-cd-min-breakdown-active-fraction", type=float, default=0.50)
+    parser.add_argument("--active-cd-max-pairwise-relative-span", type=float, default=0.35)
+    parser.add_argument("--liquid-volume-ml", type=float, default=2.5)
+    parser.add_argument("--metal-ion-concentration-mM", type=float, default=5.0)
+    parser.add_argument("--dose-electrons-per-metal-ion", type=float, default=1.0)
     parser.add_argument("--dpi", type=int, default=300)
     parser.add_argument("--no-pdf", action="store_true")
     parser.add_argument("--no-plots", action="store_true")
@@ -271,10 +335,162 @@ def estimate_charge_lsb_nC(monitor_voltage_V: np.ndarray, capacitance_F: float) 
     return float(np.median(subset) * capacitance_F * NC_PER_C)
 
 
+def carrier_analytic_voltage(
+    time_s: np.ndarray,
+    voltage_V: np.ndarray,
+    carrier_Hz: float,
+    low_ratio: float = 0.35,
+    high_ratio: float = 1.65,
+) -> np.ndarray:
+    """Return a band-limited analytic carrier including its duty envelope."""
+    count = len(time_s)
+    if count < 8 or carrier_Hz <= 0:
+        return np.zeros(count, dtype=complex)
+    dt = float(np.median(np.diff(time_s)))
+    if not np.isfinite(dt) or dt <= 0:
+        return np.zeros(count, dtype=complex)
+    centered = np.asarray(voltage_V, dtype=float) - float(np.median(voltage_V))
+    spectrum = np.fft.fft(centered)
+    frequencies = np.fft.fftfreq(count, dt)
+    keep = (frequencies >= low_ratio * carrier_Hz) & (
+        frequencies <= high_ratio * carrier_Hz
+    )
+    analytic_spectrum = np.zeros(count, dtype=complex)
+    analytic_spectrum[keep] = 2.0 * spectrum[keep]
+    return np.fft.ifft(analytic_spectrum)
+
+
+def complex_capacitance_least_squares(
+    time_s: np.ndarray,
+    voltage_V: np.ndarray,
+    charge_C: np.ndarray,
+    carrier_Hz: float,
+) -> tuple[complex | None, np.ndarray, float | None, float | None]:
+    """Fit ``q = C' v_carrier + C'' v90_carrier + offset + drift``.
+
+    The complete passive waveform contributes to the fit, avoiding the
+    zero-crossing endpoint ratios that can lock to one ADC code.  The returned
+    convention is ``C* = C' - i C''``.
+    """
+    analytic = carrier_analytic_voltage(time_s, voltage_V, carrier_Hz)
+    amplitude = np.abs(analytic)
+    if len(amplitude) < 8 or not np.any(np.isfinite(amplitude)):
+        return None, analytic, None, None
+    scale = float(np.percentile(amplitude[np.isfinite(amplitude)], 90))
+    if scale <= np.finfo(float).eps:
+        return None, analytic, None, None
+    mask = (
+        np.isfinite(charge_C)
+        & np.isfinite(analytic.real)
+        & np.isfinite(analytic.imag)
+        & (amplitude >= 0.10 * scale)
+    )
+    if int(np.sum(mask)) < 20:
+        return None, analytic, None, None
+    centered_time = time_s - float(np.mean(time_s[mask]))
+    time_scale = max(float(np.ptp(time_s[mask])), np.finfo(float).eps)
+    design = np.column_stack(
+        (
+            analytic.real[mask],
+            analytic.imag[mask],
+            np.ones(int(np.sum(mask))),
+            centered_time[mask] / time_scale,
+        )
+    )
+    coefficients, _, rank, _ = np.linalg.lstsq(design, charge_C[mask], rcond=None)
+    if rank < 4 or not np.all(np.isfinite(coefficients[:2])):
+        return None, analytic, None, None
+    prediction = design @ coefficients
+    residual_rms_nC = float(
+        np.sqrt(np.mean((charge_C[mask] - prediction) ** 2)) * NC_PER_C
+    )
+    carrier_prediction = (
+        coefficients[0] * analytic.real[mask]
+        + coefficients[1] * analytic.imag[mask]
+    )
+    signal_pp_nC = float(
+        (np.percentile(carrier_prediction, 99) - np.percentile(carrier_prediction, 1))
+        * NC_PER_C
+    )
+    return (
+        complex(float(coefficients[0]), -float(coefficients[1])),
+        analytic,
+        residual_rms_nC,
+        signal_pp_nC,
+    )
+
+
+def passive_background_nC(
+    lobe: LobeObservation,
+    cprime_pF: float | np.ndarray,
+    closs_pF: float | np.ndarray,
+) -> float | np.ndarray:
+    """Predict directed passive charge at one lobe from the complex model."""
+    return (
+        cprime_pF * lobe.background_cprime_basis_nC_per_pF
+        + closs_pF * lobe.background_closs_basis_nC_per_pF
+    )
+
+
+def lissajous_burst_periods(
+    time_s: np.ndarray,
+    voltage_V: np.ndarray,
+    charge_C: np.ndarray,
+    windows: Sequence[slice],
+    activity_mask: np.ndarray | None,
+) -> list[BurstPeriodObservation]:
+    """Calculate raw closed Q-V area and envelope on-fraction per burst period."""
+    output: list[BurstPeriodObservation] = []
+    for burst_index, window in enumerate(windows):
+        t = np.asarray(time_s[window], dtype=float)
+        v = np.asarray(voltage_V[window], dtype=float) * 1.0e-3
+        q = np.asarray(charge_C[window], dtype=float) * NC_PER_C
+        finite_mask = np.isfinite(t) & np.isfinite(v) & np.isfinite(q)
+        if int(np.sum(finite_mask)) < 20:
+            continue
+        t, v, q = t[finite_mask], v[finite_mask], q[finite_mask]
+        signed = 0.5 * float(np.sum(v * (np.roll(q, -1) - np.roll(q, 1))))
+        energy = abs(signed)
+        closure = 0.5 * float(v[-1] * q[0] - q[-1] * v[0])
+        closure_fraction = abs(closure) / energy if energy > np.finfo(float).eps else None
+        on_fraction = None
+        if activity_mask is not None:
+            active = np.asarray(activity_mask[window], dtype=float)[finite_mask]
+            if len(active) >= 2 and t[-1] > t[0]:
+                weights = np.diff(t)
+                on_fraction = float(
+                    np.sum(0.5 * (active[:-1] + active[1:]) * weights)
+                    / (t[-1] - t[0])
+                )
+        output.append(
+            BurstPeriodObservation(
+                burst_index=burst_index,
+                start_s=float(t[0]),
+                stop_s=float(t[-1]),
+                midpoint_s=0.5 * float(t[0] + t[-1]),
+                signed_energy_uJ=signed,
+                energy_uJ=energy,
+                duty_on_fraction=on_fraction,
+                closure_delta_V_kV=float(v[-1] - v[0]),
+                closure_delta_Q_nC=float(q[-1] - q[0]),
+                closure_contribution_fraction=closure_fraction,
+            )
+        )
+    return output
+
+
+def apparent_power_from_burst_energy_mW(
+    energy_uJ: float, burst_frequency_Hz: float
+) -> float:
+    """Convert energy per burst period to average power in milliwatts."""
+    return float(energy_uJ) * float(burst_frequency_Hz) / 1000.0
+
+
 def _crossing_lobes(
     time_s: np.ndarray,
     voltage_V: np.ndarray,
     charge_C: np.ndarray,
+    carrier_voltage: np.ndarray,
     carrier_Hz: float,
     burst_index: int,
 ) -> list[LobeObservation]:
@@ -297,6 +513,12 @@ def _crossing_lobes(
         crossing_times.append(float(time_s[index] + fraction * (time_s[index + 1] - time_s[index])))
     crossing_times_a = np.asarray(crossing_times)
     q_at = np.interp(crossing_times_a, time_s, charge_C)
+    carrier_inphase_at = np.interp(
+        crossing_times_a, time_s, np.asarray(carrier_voltage).real
+    )
+    carrier_quadrature_at = np.interp(
+        crossing_times_a, time_s, np.asarray(carrier_voltage).imag
+    )
     half_period = 0.5 / carrier_Hz
     robust_peak = max(abs(float(np.percentile(centered, 1))), abs(float(np.percentile(centered, 99))))
     if robust_peak <= 0:
@@ -322,6 +544,16 @@ def _crossing_lobes(
                 duration_s=float(duration),
                 midpoint_s=0.5 * float(crossing_times_a[j + 1] + crossing_times_a[j]),
                 raw_directed_charge_nC=directed,
+                background_cprime_basis_nC_per_pF=(
+                    polarity
+                    * float(carrier_inphase_at[j + 1] - carrier_inphase_at[j])
+                    * 1.0e-3
+                ),
+                background_closs_basis_nC_per_pF=(
+                    polarity
+                    * float(carrier_quadrature_at[j + 1] - carrier_quadrature_at[j])
+                    * 1.0e-3
+                ),
             )
         )
     return result
@@ -333,15 +565,26 @@ def extract_lobes(
     charge_C: np.ndarray,
     carrier_Hz: float,
     burst_kHz: int,
+    carrier_voltage: np.ndarray | None = None,
+    windows: Sequence[slice] | None = None,
 ) -> list[LobeObservation]:
-    windows = burst_windows(time_s, voltage_V, burst_kHz, carrier_Hz)
+    if carrier_voltage is None:
+        carrier_voltage = carrier_analytic_voltage(time_s, voltage_V, carrier_Hz)
+    windows = list(windows) if windows is not None else burst_windows(
+        time_s, voltage_V, burst_kHz, carrier_Hz
+    )
     if not windows:
         windows = [slice(0, len(time_s))]
     result: list[LobeObservation] = []
     for burst_index, window in enumerate(windows):
         result.extend(
             _crossing_lobes(
-                time_s[window], voltage_V[window], charge_C[window], carrier_Hz, burst_index
+                time_s[window],
+                voltage_V[window],
+                charge_C[window],
+                carrier_voltage[window],
+                carrier_Hz,
+                burst_index,
             )
         )
     return result
@@ -434,6 +677,9 @@ def analyze_file(archive: zipfile.ZipFile, record: MemberRecord, args: argparse.
         args.carrier_min_khz * 1000.0,
         args.carrier_max_khz * 1000.0,
     )
+    activity_mask: np.ndarray | None = None
+    duty_fraction_hint: float | None = None
+    duty_contrast: float | None = None
     try:
         duty = select_two_duty_cycles(
             time_s,
@@ -442,22 +688,75 @@ def analyze_file(archive: zipfile.ZipFile, record: MemberRecord, args: argparse.
         )
         detected_burst = float(duty.frequency_Hz)
         detection_method = duty.method
-        if not np.isfinite(detected_burst) or detected_burst >= 0.5 * carrier:
+        if (
+            not np.isfinite(detected_burst)
+            or detected_burst >= 0.5 * carrier
+            or "fallback" in detection_method
+        ):
             detected_burst = float(record.condition.burst_kHz * 1000.0)
             detection_method = "nominal_folder_frequency_after_carrier_fallback"
+        else:
+            activity_mask = duty_activity_mask(
+                time_s, voltage, waveform.current_input_A, duty
+            )
+            duty_fraction_hint = duty.active_fraction
+            duty_contrast = duty.envelope_contrast
     except WaveformAnalysisError:
         detected_burst = float(record.condition.burst_kHz * 1000.0)
         detection_method = "nominal_folder_frequency_after_detection_failure"
     nominal_burst = float(record.condition.burst_kHz * 1000.0)
     burst_error = abs(detected_burst - nominal_burst) / nominal_burst
-    cstar = phasor_ratio(time_s, charge, voltage, carrier)
+    cstar, analytic_voltage, fit_residual_nC, fit_signal_pp_nC = (
+        complex_capacitance_least_squares(time_s, voltage, charge, carrier)
+    )
+    if cstar is None:
+        cstar = phasor_ratio(time_s, charge, voltage, carrier)
     used_burst_kHz = detected_burst * 1.0e-3
-    lobes = extract_lobes(time_s, voltage, charge, carrier, used_burst_kHz)
     windows = burst_windows(time_s, voltage, used_burst_kHz, carrier)
+    lobes = extract_lobes(
+        time_s,
+        voltage,
+        charge,
+        carrier,
+        used_burst_kHz,
+        analytic_voltage,
+        windows,
+    )
     raw_x, raw_y = burst_extrema_features(time_s, voltage, charge, windows)
+    periods = lissajous_burst_periods(
+        time_s, voltage, charge, windows, activity_mask
+    )
+    period_energies = [period.energy_uJ for period in periods]
+    period_duties = [
+        period.duty_on_fraction
+        for period in periods
+        if period.duty_on_fraction is not None
+    ]
+    energy_median = median_or_none(period_energies)
+    duty_on_fraction = median_or_none(period_duties)
+    if duty_on_fraction is None:
+        duty_on_fraction = duty_fraction_hint
     quiet_change, quiet_status = quiet_edge_charge(time_s, voltage, charge, carrier)
     qv_u, qv_q = representative_qv(
         time_s, voltage, charge, used_burst_kHz, carrier
+    )
+    charge_lsb_nC = estimate_charge_lsb_nC(
+        waveform.monitor_voltage_V, capacitance_F
+    )
+    voltage_clipped = detect_clipping(waveform.source_voltage_V)
+    current_clipped = detect_clipping(waveform.current_input_A)
+    monitor_clipped = detect_clipping(waveform.monitor_voltage_V)
+    apparent_power_mW = (
+        apparent_power_from_burst_energy_mW(energy_median, detected_burst)
+        if energy_median is not None and not voltage_clipped and not monitor_clipped
+        else None
+    )
+    signal_codes = (
+        fit_signal_pp_nC / charge_lsb_nC
+        if fit_signal_pp_nC is not None
+        and charge_lsb_nC is not None
+        and charge_lsb_nC > 0
+        else None
     )
     return FileObservation(
         record=record,
@@ -473,17 +772,24 @@ def analyze_file(archive: zipfile.ZipFile, record: MemberRecord, args: argparse.
         lobes=lobes,
         raw_extrema_x_kV=raw_x,
         raw_extrema_y_nC=raw_y,
-        charge_lsb_nC=estimate_charge_lsb_nC(waveform.monitor_voltage_V, capacitance_F),
-        clipping_flag=detect_clipping(
-            waveform.source_voltage_V,
-            waveform.current_input_A,
-            waveform.monitor_voltage_V,
-        ),
+        charge_lsb_nC=charge_lsb_nC,
+        clipping_flag=voltage_clipped or current_clipped or monitor_clipped,
         skipped_rows=waveform.skipped_rows,
         quiet_edge_change_raw_nC=quiet_change,
         quiet_edge_status=quiet_status,
         qv_voltage_kV=qv_u,
         qv_charge_raw_nC=qv_q,
+        complex_fit_residual_rms_nC=fit_residual_nC,
+        complex_fit_signal_codes=signal_codes,
+        voltage_clipping_flag=voltage_clipped,
+        current_clipping_flag=current_clipped,
+        monitor_clipping_flag=monitor_clipped,
+        duty_on_fraction=duty_on_fraction,
+        duty_envelope_contrast=duty_contrast,
+        burst_energy_uJ=period_energies,
+        burst_periods=periods,
+        burst_energy_median_uJ=energy_median,
+        apparent_power_mW=apparent_power_mW,
     )
 
 
@@ -592,6 +898,190 @@ def scan_secant_bootstrap(
     return float(slope) if slope is not None else None, low, high, physical
 
 
+def active_cd_three_level_fit(
+    observations: Sequence[FileObservation],
+    sign: int,
+    cprime_pF: float | None,
+    cprime_draws: np.ndarray,
+    closs_pF: float | None,
+    passive_threshold_nC: dict[int, float],
+    args: argparse.Namespace,
+    rng: np.random.Generator,
+) -> dict:
+    """Fit an effective active-branch ``Cd`` from 100/105/115 % medians.
+
+    The three commanded levels are independent amplitude settings, while the
+    many files at each setting are technical repeats.  Consequently the
+    regression is performed on three capture medians and the bootstrap
+    resamples captures *within* level.  The result remains provisional: three
+    levels can test curvature and consistency, but do not replace a denser
+    active-amplitude scan or a direct dielectric-capacitance measurement.
+    """
+    groups: dict[int, list[tuple[FileObservation, float, float]]] = defaultdict(list)
+    raw_counts: dict[int, int] = {}
+    for level in ACTIVE_CD_LEVELS:
+        candidates: list[tuple[FileObservation, float, float]] = []
+        for row in observations:
+            if row.level_label != str(level):
+                continue
+            if row.raw_extrema_x_kV is None or row.raw_extrema_y_nC is None:
+                continue
+            if row.voltage_clipping_flag or row.monitor_clipping_flag:
+                continue
+            x = sign * float(row.raw_extrema_x_kV)
+            y = float(row.raw_extrema_y_nC)
+            if np.isfinite(x) and np.isfinite(y) and x > 0.02 and y > 0:
+                candidates.append((row, x, y))
+        raw_counts[level] = len(candidates)
+        if candidates:
+            x_center = float(np.median([item[1] for item in candidates]))
+            y_center = float(np.median([item[2] for item in candidates]))
+            # Remove collapsed/pathological captures without trimming the
+            # ordinary repeat distribution.  This catches the known BMIM 115
+            # % capture whose extrema are close to zero on both axes.
+            candidates = [
+                item for item in candidates
+                if 0.25 * x_center <= item[1] <= 4.0 * x_center
+                and 0.25 * y_center <= item[2] <= 4.0 * y_center
+            ]
+        groups[level] = candidates
+
+    clean_counts = {level: len(groups[level]) for level in ACTIVE_CD_LEVELS}
+    centers: dict[int, tuple[float, float]] = {}
+    for level in ACTIVE_CD_LEVELS:
+        if groups[level]:
+            centers[level] = (
+                float(np.median([item[1] for item in groups[level]])),
+                float(np.median([item[2] for item in groups[level]])),
+            )
+
+    slope = intercept = r_squared = None
+    pairwise: list[float] = []
+    pairwise_span = None
+    monotonic_x = monotonic_y = False
+    if len(centers) == len(ACTIVE_CD_LEVELS):
+        x = np.asarray([centers[level][0] for level in ACTIVE_CD_LEVELS])
+        y = np.asarray([centers[level][1] for level in ACTIVE_CD_LEVELS])
+        monotonic_x = bool(np.all(np.diff(x) > 0.02))
+        monotonic_y = bool(np.all(np.diff(y) > 0.0))
+        slope, intercept, r_squared = linear_fit(x, y)
+        for left, right in zip(ACTIVE_CD_LEVELS[:-1], ACTIVE_CD_LEVELS[1:]):
+            dx = centers[right][0] - centers[left][0]
+            if abs(dx) > 0.02:
+                pairwise.append((centers[right][1] - centers[left][1]) / dx)
+        dx = centers[115][0] - centers[100][0]
+        if abs(dx) > 0.02:
+            pairwise.append((centers[115][1] - centers[100][1]) / dx)
+        if len(pairwise) >= 2:
+            denominator = abs(float(np.median(pairwise)))
+            if denominator > np.finfo(float).eps:
+                pairwise_span = float((max(pairwise) - min(pairwise)) / denominator)
+
+    breakdown_active: list[bool] = []
+    if cprime_pF is not None and closs_pF is not None:
+        for row, _, _ in groups[100]:
+            resolved = False
+            for lobe in row.lobes:
+                background = passive_background_nC(lobe, cprime_pF, closs_pF)
+                excess = sign * lobe.raw_directed_charge_nC - float(background)
+                if excess > passive_threshold_nC.get(lobe.voltage_polarity, 0.0):
+                    resolved = True
+                    break
+            breakdown_active.append(resolved)
+    breakdown_active_fraction = (
+        float(np.mean(breakdown_active)) if breakdown_active else None
+    )
+
+    bootstrap_slopes = np.full(args.bootstrap_replicates, np.nan)
+    if all(clean_counts[level] >= 2 for level in ACTIVE_CD_LEVELS):
+        sampled_centers: dict[int, tuple[np.ndarray, np.ndarray]] = {}
+        for level in ACTIVE_CD_LEVELS:
+            values = np.asarray([(item[1], item[2]) for item in groups[level]], dtype=float)
+            indices = moving_block_index_matrix(
+                len(values),
+                args.bootstrap_replicates,
+                args.bootstrap_block_files,
+                rng,
+            )
+            sampled_centers[level] = (
+                np.median(values[:, 0][indices], axis=1),
+                np.median(values[:, 1][indices], axis=1),
+            )
+        for iteration in range(args.bootstrap_replicates):
+            bx = np.asarray(
+                [sampled_centers[level][0][iteration] for level in ACTIVE_CD_LEVELS]
+            )
+            by = np.asarray(
+                [sampled_centers[level][1][iteration] for level in ACTIVE_CD_LEVELS]
+            )
+            if np.all(np.diff(bx) > 0.02):
+                fitted, _, _ = linear_fit(bx, by)
+                if fitted is not None:
+                    bootstrap_slopes[iteration] = fitted
+    finite_slopes = bootstrap_slopes[np.isfinite(bootstrap_slopes)]
+    low, high = percentile_interval(finite_slopes)
+    if cprime_pF is None:
+        physical_fraction = 0.0
+    elif len(finite_slopes):
+        if len(cprime_draws) == len(bootstrap_slopes):
+            valid = np.isfinite(bootstrap_slopes) & np.isfinite(cprime_draws)
+            physical_fraction = float(
+                np.mean(bootstrap_slopes[valid] > 1.05 * cprime_draws[valid])
+            ) if np.any(valid) else 0.0
+        else:
+            physical_fraction = float(np.mean(finite_slopes > 1.05 * cprime_pF))
+    else:
+        physical_fraction = 0.0
+
+    gates: list[str] = []
+    for level in ACTIVE_CD_LEVELS:
+        if clean_counts[level] < args.active_cd_min_clean_captures:
+            gates.append(f"fewer_than_{args.active_cd_min_clean_captures}_clean_captures_at_{level}_percent")
+    if not monotonic_x:
+        gates.append("active_voltage_not_monotonic")
+    if not monotonic_y:
+        gates.append("active_charge_not_monotonic")
+    if slope is None or not np.isfinite(slope) or slope <= 0:
+        gates.append("missing_or_nonpositive_three_level_slope")
+    if r_squared is None or r_squared < args.active_cd_min_r_squared:
+        gates.append("three_level_r_squared_below_threshold")
+    if pairwise_span is None or pairwise_span > args.active_cd_max_pairwise_relative_span:
+        gates.append("pairwise_active_slopes_inconsistent")
+    if (
+        breakdown_active_fraction is None
+        or breakdown_active_fraction < args.active_cd_min_breakdown_active_fraction
+    ):
+        gates.append("breakdown_level_not_resolved_as_active")
+    if physical_fraction < 0.95:
+        gates.append("Cd_bootstrap_physical_fraction_below_0.95")
+
+    status = (
+        "supported_provisional_three_level_effective_Cd"
+        if not gates
+        else "rejected_three_level_effective_Cd"
+    )
+    return {
+        "slope_pF": slope,
+        "intercept_nC": intercept,
+        "r_squared": r_squared,
+        "ci_low_pF": low,
+        "ci_high_pF": high,
+        "physical_fraction": physical_fraction,
+        "pairwise_relative_span": pairwise_span,
+        "breakdown_active_fraction": breakdown_active_fraction,
+        "levels": ";".join(
+            f"{level}:{centers[level][0]:.9g}kV,{centers[level][1]:.9g}nC"
+            for level in ACTIVE_CD_LEVELS if level in centers
+        ),
+        "clean_counts": ";".join(
+            f"{level}:{clean_counts[level]}/{raw_counts[level]}" for level in ACTIVE_CD_LEVELS
+        ),
+        "bootstrap_pF": bootstrap_slopes,
+        "failed_gates": gates,
+        "status": status,
+    }
+
+
 def geometry_cd_pF(diameter_cm: float, thickness_mm: float, epsilon_r: float) -> float:
     epsilon_0 = 8.8541878128e-12
     area_m2 = math.pi * (diameter_cm * 0.01 / 2.0) ** 2
@@ -634,51 +1124,70 @@ def build_calibration(
     args: argparse.Namespace,
     rng: np.random.Generator,
 ) -> CalibrationModel:
-    passive_rows = [row for row in observations if row.level_label in {"40", "60", "75"}]
-    passive_complete = all(any(row.level_label == str(level) for row in passive_rows) for level in PASSIVE_FIT_LEVELS)
+    passive_all = [
+        row for row in observations
+        if row.level_label in {str(level) for level in PASSIVE_FIT_LEVELS}
+    ]
+    passive_rows = [
+        row for row in passive_all
+        if not row.voltage_clipping_flag and not row.monitor_clipping_flag
+    ]
+    passive_complete = all(
+        any(row.level_label == str(level) for row in passive_rows)
+        for level in PASSIVE_FIT_LEVELS
+    )
+
     cprime_by_level: list[float] = []
+    closs_by_level: list[float] = []
     cprime_files: list[float] = []
     closs_files: list[float] = []
-    for level in PASSIVE_FIT_LEVELS:
-        values = _level_cstar_values(observations, sign, level)
-        cprime_by_level.append(float(np.median([value.real * 1.0e12 for value in values])) if values else np.nan)
-        cprime_files.extend(value.real * 1.0e12 for value in values)
-        closs_files.extend(-value.imag * 1.0e12 for value in values)
-    cprime_pF = median_or_none(cprime_files)
-    closs_pF = median_or_none(closs_files)
     cprime_parts: list[np.ndarray] = []
     closs_parts: list[np.ndarray] = []
     for level in PASSIVE_FIT_LEVELS:
-        level_values = _level_cstar_values(observations, sign, level)
-        if not level_values:
-            continue
-        indices = moving_block_index_matrix(
-            len(level_values),
-            args.bootstrap_replicates,
-            args.bootstrap_block_files,
-            rng,
-        )
-        cprime_parts.append(
-            np.asarray([value.real * 1.0e12 for value in level_values])[indices]
-        )
-        closs_parts.append(
-            np.asarray([-value.imag * 1.0e12 for value in level_values])[indices]
-        )
+        level_rows = [
+            row for row in passive_rows
+            if row.level_label == str(level) and row.cstar_raw_F is not None
+        ]
+        values = [sign * row.cstar_raw_F for row in level_rows]
+        level_cprime = [value.real * 1.0e12 for value in values]
+        level_closs = [-value.imag * 1.0e12 for value in values]
+        cprime_by_level.append(median_or_none(level_cprime) or np.nan)
+        closs_by_level.append(median_or_none(level_closs) or np.nan)
+        cprime_files.extend(level_cprime)
+        closs_files.extend(level_closs)
+        if values:
+            indices = moving_block_index_matrix(
+                len(values),
+                args.bootstrap_replicates,
+                args.bootstrap_block_files,
+                rng,
+            )
+            cprime_parts.append(np.asarray(level_cprime, dtype=float)[indices])
+            closs_parts.append(np.asarray(level_closs, dtype=float)[indices])
+
+    cprime_pF = median_or_none(cprime_files)
+    closs_pF = median_or_none(closs_files)
     cprime_draws = (
-        np.median(np.concatenate(cprime_parts, axis=1), axis=1)
+        np.nanmedian(np.concatenate(cprime_parts, axis=1), axis=1)
         if cprime_parts else np.asarray([], dtype=float)
     )
     closs_draws = (
-        np.median(np.concatenate(closs_parts, axis=1), axis=1)
+        np.nanmedian(np.concatenate(closs_parts, axis=1), axis=1)
         if closs_parts else np.asarray([], dtype=float)
     )
     cprime_low, cprime_high = percentile_interval(cprime_draws)
     closs_low, closs_high = percentile_interval(closs_draws)
-    tan_delta = None
-    if cprime_pF is not None and closs_pF is not None and abs(cprime_pF) > np.finfo(float).eps:
-        tan_delta = closs_pF / cprime_pF
+    tan_delta = (
+        closs_pF / cprime_pF
+        if cprime_pF is not None and closs_pF is not None
+        and abs(cprime_pF) > np.finfo(float).eps
+        else None
+    )
     span = relative_span(cprime_by_level)
 
+    # Retain the old amplitude-ratio slopes as explicitly deprecated
+    # diagnostics.  They are no longer used for subtraction or uncertainty;
+    # this prevents few-code controls from collapsing onto an ADC grid ratio.
     slopes: dict[int, float | None] = {}
     slope_mad: dict[int, float | None] = {}
     file_slopes: dict[int, list[float]] = {-1: [], 1: []}
@@ -692,75 +1201,132 @@ def build_calibration(
         slopes[polarity] = median_or_none(file_slopes[polarity])
         slope_mad[polarity] = robust_mad(file_slopes[polarity])
         residuals: list[float] = []
-        if slopes[polarity] is not None:
+        if cprime_pF is not None and closs_pF is not None:
             for row in passive_rows:
                 for lobe in row.lobes:
                     if lobe.voltage_polarity == polarity:
                         residuals.append(
                             sign * lobe.raw_directed_charge_nC
-                            - float(slopes[polarity]) * lobe.amplitude_kV
+                            - float(passive_background_nC(lobe, cprime_pF, closs_pF))
                         )
         residual_array = finite(residuals)
-        threshold = float(np.percentile(residual_array, 95)) if len(residual_array) else 0.0
+        threshold = (
+            float(np.percentile(residual_array, 95)) if len(residual_array) else 0.0
+        )
         if charge_lsb is not None:
             threshold = max(threshold, charge_lsb)
         thresholds[polarity] = max(0.0, threshold)
 
-    failed: list[str] = []
+    background_failed: list[str] = []
     if not passive_complete:
-        failed.append("missing_40_60_or_75_percent_level")
+        background_failed.append("missing_unclipped_40_60_or_75_percent_level")
     if sign_agreement < args.minimum_sign_agreement:
-        failed.append("charge_polarity_vote_ambiguous")
-    if cprime_pF is None or cprime_pF <= 0:
-        failed.append("nonpositive_Cprime")
-    if closs_pF is None or closs_pF < 0:
-        failed.append("nonpassive_loss_orientation")
-    if (
-        cprime_pF is not None
-        and closs_pF is not None
-        and math.degrees(math.atan2(max(0.0, closs_pF), max(np.finfo(float).eps, cprime_pF))) > 45.0
-    ):
-        failed.append("passive_phase_exceeds_45_degrees")
-    if span is None or span > 0.30:
-        failed.append("Cprime_not_stable_across_passive_levels")
+        background_failed.append("charge_polarity_vote_ambiguous")
+    if cprime_pF is None or closs_pF is None:
+        background_failed.append("complex_background_coefficients_unavailable")
+    available_fraction = (
+        len(cprime_files) / len(passive_rows) if passive_rows else 0.0
+    )
+    if available_fraction < 0.75:
+        background_failed.append("complex_fit_available_for_fewer_than_75_percent_passive_captures")
+    signal_codes = median_or_none(row.complex_fit_signal_codes for row in passive_rows)
+    if signal_codes is None or signal_codes < 8.0:
+        background_failed.append("passive_monitor_signal_below_8_ADC_codes")
     burst_error = median_or_none(row.burst_frequency_relative_error for row in passive_rows)
     if burst_error is None or burst_error > 0.15:
-        failed.append("detected_burst_frequency_disagrees_with_condition_label")
-    for polarity in (-1, 1):
-        slope = slopes.get(polarity)
-        spread = slope_mad.get(polarity)
-        name = "negative_voltage" if polarity < 0 else "positive_voltage"
-        if slope is None or not np.isfinite(slope) or slope <= 0:
-            failed.append(f"missing_or_nonpositive_passive_slope_{name}")
-        elif spread is None or not np.isfinite(spread) or spread / slope > 0.50:
-            failed.append(f"unstable_passive_slope_{name}")
-    passive_status = "supported_effective_complex_at_carrier" if not failed else "failed_passive_model_validation"
+        background_failed.append("detected_burst_frequency_disagrees_with_condition_label")
 
-    scan_cd, scan_low, scan_high, physical_fraction = scan_secant_bootstrap(
-        observations, sign, args.bootstrap_replicates, rng, cprime_pF
+    # The unused 90 % data are an empirical prediction audit, not another fit
+    # level.  A grossly larger residual than both the training null and three
+    # ADC steps rejects transfer of the complex background to breakdown.
+    holdout_rows = [
+        row for row in observations
+        if row.level_label == "90"
+        and not row.voltage_clipping_flag and not row.monitor_clipping_flag
+    ]
+    if holdout_rows and cprime_pF is not None and closs_pF is not None:
+        for polarity in (-1, 1):
+            per_capture: list[float] = []
+            for row in holdout_rows:
+                residuals = [
+                    sign * lobe.raw_directed_charge_nC
+                    - float(passive_background_nC(lobe, cprime_pF, closs_pF))
+                    for lobe in row.lobes if lobe.voltage_polarity == polarity
+                ]
+                if residuals:
+                    per_capture.append(float(np.percentile(residuals, 95)))
+            if per_capture:
+                allowed = max(
+                    3.0 * thresholds[polarity],
+                    thresholds[polarity] + 3.0 * float(charge_lsb or 0.0),
+                )
+                if float(np.median(per_capture)) > allowed:
+                    name = "negative_voltage" if polarity < 0 else "positive_voltage"
+                    background_failed.append(f"90_percent_holdout_background_failure_{name}")
+    background_status = (
+        "supported_whole_waveform_complex_background"
+        if not background_failed
+        else "failed_empirical_complex_background_validation"
     )
-    scan_gates: list[str] = []
-    if scan_cd is None:
-        scan_gates.append("missing_or_degenerate_105_115_secant")
-    if cprime_pF is None or scan_cd is None or scan_cd <= 1.05 * cprime_pF:
-        scan_gates.append("Cd_not_greater_than_Ccell")
-    if physical_fraction < 0.80:
-        scan_gates.append("bootstrap_physical_fraction_below_0.80")
-    # Two levels cannot establish a publication-quality active regression.
-    scan_gates.append("only_two_independent_active_amplitudes")
-    scan_status = "rejected_diagnostic_two_level_secant" if scan_gates else "validated_effective_Cd"
+
+    physical_failed = list(background_failed)
+    if cprime_pF is None or cprime_pF <= 0:
+        physical_failed.append("nonpositive_Cprime")
+    if closs_pF is None or closs_pF < 0:
+        physical_failed.append("nonpassive_loss_orientation")
+    if (
+        cprime_pF is not None and closs_pF is not None
+        and math.degrees(
+            math.atan2(max(0.0, closs_pF), max(np.finfo(float).eps, cprime_pF))
+        ) > 45.0
+    ):
+        physical_failed.append("passive_phase_exceeds_45_degrees")
+    if span is None or span > 0.30:
+        physical_failed.append("Cprime_not_stable_across_passive_levels")
+    passive_status = (
+        "supported_effective_complex_Ccell_at_carrier"
+        if not physical_failed else "failed_physical_Ccell_validation"
+    )
+
+    active_fit = active_cd_three_level_fit(
+        observations,
+        sign,
+        cprime_pF,
+        cprime_draws,
+        closs_pF,
+        thresholds,
+        args,
+        rng,
+    )
+    scan_gates = list(active_fit["failed_gates"])
+    # The active Q–V slope can support a provisional effective Cd even when
+    # the separate passive Ccell measurement is too quantized to support the
+    # correction factor.  Keep those two decisions explicit.
+    scan_status = active_fit["status"]
+    scan_factor_status = (
+        "supported_provisional_Cd_over_Cd_minus_Ccell_factor"
+        if scan_status.startswith("supported") and passive_status.startswith("supported")
+        else "not_usable_physical_Ccell_not_supported"
+        if scan_status.startswith("supported")
+        else "not_usable_active_Cd_fit_rejected"
+    )
 
     geometry_cd = None
-    geometry_factor = None
-    geometry_low = None
-    geometry_high = None
+    geometry_only_factor = None
+    geometry_only_low = None
+    geometry_only_high = None
+    central_factor = None
+    central_low = None
+    central_high = None
+    scan_factor_diagnostic = None
+    scan_factor_diagnostic_low = None
+    scan_factor_diagnostic_high = None
     factor_source = "none"
     evidence = "background_subtracted_terminal_excess"
     if (
         passive_status.startswith("supported")
         and condition.material in CONDUCTIVE_LIQUIDS
-        and cprime_pF is not None
-        and cprime_pF > 0
+        and cprime_pF is not None and cprime_pF > 0
     ):
         geometry_cd = geometry_cd_pF(
             args.beaker_diameter_cm,
@@ -768,20 +1334,54 @@ def build_calibration(
             0.5 * (args.pyrex_epsilon_min + args.pyrex_epsilon_max),
         )
         if geometry_cd > 1.05 * cprime_pF:
-            geometry_factor = geometry_cd / (geometry_cd - cprime_pF)
-            _, factor_samples = geometry_factor_samples(
+            geometry_only_factor = geometry_cd / (geometry_cd - cprime_pF)
+            _, geometry_samples = geometry_factor_samples(
                 cprime_pF, args, args.bootstrap_replicates, rng
             )
-            geometry_low, geometry_high = percentile_interval(factor_samples)
-            factor_source = "full_base_pyrex_geometry_scenario"
-            evidence = "exploratory_model_dependent"
-    if scan_status == "validated_effective_Cd" and scan_cd is not None and cprime_pF is not None:
-        geometry_factor = scan_cd / (scan_cd - cprime_pF)
-        factor_source = "validated_voltage_scan"
-        evidence = "validated_model_dependent"
-    if not passive_status.startswith("supported"):
-        evidence = "diagnostic_passive_background_model_rejected"
-    failed.extend(scan_gates)
+            geometry_only_low, geometry_only_high = percentile_interval(geometry_samples)
+
+    scan_cd = active_fit["slope_pF"]
+    if (
+        scan_status.startswith("supported")
+        and scan_cd is not None and cprime_pF is not None
+        and scan_cd > 1.05 * cprime_pF
+    ):
+        scan_factor_diagnostic = scan_cd / (scan_cd - cprime_pF)
+        scan_draws = np.asarray(active_fit["bootstrap_pF"], dtype=float)
+        if len(scan_draws) == len(cprime_draws):
+            denominator = scan_draws - cprime_draws
+            factor_draws = np.where(
+                denominator > 0.05 * scan_draws,
+                scan_draws / denominator,
+                np.nan,
+            )
+            scan_factor_diagnostic_low, scan_factor_diagnostic_high = percentile_interval(
+                factor_draws
+            )
+        if passive_status.startswith("supported"):
+            central_factor = scan_factor_diagnostic
+            central_low = scan_factor_diagnostic_low
+            central_high = scan_factor_diagnostic_high
+            factor_source = "provisional_three_level_active_scan"
+            evidence = "supported_provisional_model_dependent"
+    if central_factor is None and geometry_only_factor is not None:
+        central_factor = geometry_only_factor
+        central_low, central_high = geometry_only_low, geometry_only_high
+        factor_source = "full_base_pyrex_geometry_scenario"
+        evidence = "exploratory_model_dependent"
+    if not background_status.startswith("supported"):
+        evidence = "diagnostic_complex_background_model_rejected"
+
+    factor_gates = (
+        ["charge_factor:physical_Ccell_not_supported"]
+        if scan_status.startswith("supported") and not passive_status.startswith("supported")
+        else []
+    )
+    failed = list(dict.fromkeys(
+        physical_failed
+        + [f"active_Cd:{gate}" for gate in scan_gates]
+        + factor_gates
+    ))
     return CalibrationModel(
         condition=condition,
         sign=sign,
@@ -804,23 +1404,56 @@ def build_calibration(
         passive_file_slopes=file_slopes,
         charge_lsb_nC=charge_lsb,
         scan_cd_pF=scan_cd,
-        scan_cd_ci_low_pF=scan_low,
-        scan_cd_ci_high_pF=scan_high,
-        scan_cd_physical_fraction=physical_fraction,
+        scan_cd_ci_low_pF=active_fit["ci_low_pF"],
+        scan_cd_ci_high_pF=active_fit["ci_high_pF"],
+        scan_cd_physical_fraction=active_fit["physical_fraction"],
         scan_cd_status=scan_status,
         geometry_cd_pF=geometry_cd,
-        geometry_factor=geometry_factor,
-        geometry_factor_low=geometry_low,
-        geometry_factor_high=geometry_high,
+        geometry_factor=central_factor,
+        geometry_factor_low=central_low,
+        geometry_factor_high=central_high,
         factor_source=factor_source,
         evidence_tier=evidence,
         failed_gates=failed,
+        background_status=background_status,
+        background_failed_gates=background_failed,
+        scan_cd_intercept_nC=active_fit["intercept_nC"],
+        scan_cd_r_squared=active_fit["r_squared"],
+        scan_cd_levels=active_fit["levels"],
+        scan_cd_pairwise_relative_span=active_fit["pairwise_relative_span"],
+        scan_cd_breakdown_active_fraction=active_fit["breakdown_active_fraction"],
+        scan_cd_clean_counts=active_fit["clean_counts"],
+        scan_cd_bootstrap_pF=np.asarray(active_fit["bootstrap_pF"], dtype=float),
+        geometry_only_factor=geometry_only_factor,
+        geometry_only_factor_low=geometry_only_low,
+        geometry_only_factor_high=geometry_only_high,
+        scan_cd_charge_factor_status=scan_factor_status,
+        scan_based_factor_diagnostic=scan_factor_diagnostic,
+        scan_based_factor_diagnostic_low=scan_factor_diagnostic_low,
+        scan_based_factor_diagnostic_high=scan_factor_diagnostic_high,
     )
 
 
 def target_name(voltage_polarity: int, negative_on_pin_negative: bool) -> str:
     negative = voltage_polarity < 0 if negative_on_pin_negative else voltage_polarity > 0
     return "negative" if negative else "positive"
+
+
+def lobe_terminal_excess_nC(
+    lobe: LobeObservation,
+    calibration: CalibrationModel,
+    cprime_pF: float | np.ndarray | None = None,
+    closs_pF: float | np.ndarray | None = None,
+) -> float | np.ndarray | None:
+    """Return directed terminal charge minus the complex passive prediction."""
+    reactive = calibration.cprime_pF if cprime_pF is None else cprime_pF
+    loss = calibration.closs_pF if closs_pF is None else closs_pF
+    if reactive is None or loss is None:
+        return None
+    return (
+        calibration.sign * lobe.raw_directed_charge_nC
+        - passive_background_nC(lobe, reactive, loss)
+    )
 
 
 def per_file_metrics(
@@ -831,14 +1464,10 @@ def per_file_metrics(
 ) -> dict[str, float]:
     by_target: dict[str, list[tuple[LobeObservation, float]]] = {"negative": [], "positive": []}
     for lobe in row.lobes:
-        slope = calibration.passive_slopes_nC_per_kV.get(lobe.voltage_polarity)
-        if slope is None:
+        excess = lobe_terminal_excess_nC(lobe, calibration)
+        if excess is None:
             continue
-        excess = (
-            calibration.sign * lobe.raw_directed_charge_nC
-            - float(slope) * lobe.amplitude_kV
-        )
-        corrected = factor * excess
+        corrected = factor * float(excess)
         by_target[target_name(lobe.voltage_polarity, negative_on_pin_negative)].append(
             (lobe, corrected)
         )
@@ -930,15 +1559,23 @@ def peak_lobe_audit_rows(
     output: list[dict] = []
     for (target, burst_index), lobes in sorted(by_target_burst.items()):
         lobe = max(lobes, key=lambda item: item.amplitude_kV)
-        slope = calibration.passive_slopes_nC_per_kV.get(lobe.voltage_polarity)
-        if slope is None:
+        excess_value = lobe_terminal_excess_nC(lobe, calibration)
+        if excess_value is None:
             continue
         directed = calibration.sign * lobe.raw_directed_charge_nC
-        background = float(slope) * lobe.amplitude_kV
-        excess = directed - background
+        background = float(
+            passive_background_nC(
+                lobe,
+                float(calibration.cprime_pF),
+                float(calibration.closs_pF),
+            )
+        )
+        excess = float(excess_value)
         corrected = factor * excess
         output.append({
             "condition": row.record.condition.label,
+            "material": row.record.condition.material,
+            "burst_kHz": row.record.condition.burst_kHz,
             "member": row.record.member,
             "capture_index": row.record.capture_index,
             "burst_index": burst_index,
@@ -954,6 +1591,9 @@ def peak_lobe_audit_rows(
             "model_dependent_charge_nC": corrected,
             "halfcycle_average_equivalent_flow_per_s": corrected * 1.0e-9 / (ELEMENTARY_CHARGE_C * lobe.duration_s),
             "above_passive_resolution_threshold": excess > calibration.passive_threshold_nC.get(lobe.voltage_polarity, 0.0),
+            "background_model": "whole_waveform_complex_Cstar_endpoint_projection",
+            "evidence_tier": calibration.evidence_tier,
+            "factor_source": calibration.factor_source,
         })
     return output
 
@@ -977,6 +1617,83 @@ def aggregate_with_ci(
         intervals[key] = percentile_interval(draws)
         draws_by_key[key] = draws
     return point, intervals, draws_by_key
+
+
+def electrical_condition_metrics(
+    rows: Sequence[FileObservation],
+    replicates: int,
+    block_length: int,
+    rng: np.random.Generator,
+) -> dict:
+    """Aggregate calibration-independent raw Q-V energy and envelope duty."""
+    output: dict = {}
+    definitions = {
+        "raw_qv_energy_per_burst_uJ": [
+            row.burst_energy_median_uJ for row in rows
+            if row.burst_energy_median_uJ is not None
+            and not row.voltage_clipping_flag and not row.monitor_clipping_flag
+        ],
+        "apparent_lissajous_power_mW": [
+            row.apparent_power_mW for row in rows
+            if row.apparent_power_mW is not None
+        ],
+        "detected_activity_on_fraction": [
+            row.duty_on_fraction for row in rows
+            if row.duty_on_fraction is not None
+        ],
+    }
+    for key, values in definitions.items():
+        clean = finite(values)
+        output[key] = float(np.median(clean)) if len(clean) else None
+        draws = bootstrap_median_draws(clean, replicates, rng, block_length)
+        low, high = percentile_interval(draws)
+        output[f"{key}_ci_low"] = low
+        output[f"{key}_ci_high"] = high
+        output[f"{key}_n_captures"] = int(len(clean))
+    # Stable aliases used by the plotting/report layer.
+    output["burst_energy_median_uJ"] = output["raw_qv_energy_per_burst_uJ"]
+    output["burst_energy_median_uJ_ci_low"] = output["raw_qv_energy_per_burst_uJ_ci_low"]
+    output["burst_energy_median_uJ_ci_high"] = output["raw_qv_energy_per_burst_uJ_ci_high"]
+    output["duty_on_fraction"] = output["detected_activity_on_fraction"]
+    output["duty_on_fraction_ci_low"] = output["detected_activity_on_fraction_ci_low"]
+    output["duty_on_fraction_ci_high"] = output["detected_activity_on_fraction_ci_high"]
+    output["raw_qv_energy_definition"] = (
+        "median_cyclic_shoelace_area_per_complete_duty_burst_within_capture_"
+        "then_median_across_captures"
+    )
+    output["apparent_power_scope"] = (
+        "raw_Qm_V_apparent_reactor_input_loss_not_plasma_only"
+    )
+    output["duty_fraction_definition"] = (
+        "fraction_of_detected_activity_envelope_above_P10_plus_0.30_times_P90_minus_P10"
+    )
+    methods = [row.burst_detection_method for row in rows]
+    channels = [
+        "current" if "current" in method.lower()
+        else "voltage" if "voltage" in method.lower()
+        else "nominal_fallback"
+        for method in methods
+    ]
+    if channels:
+        output["duty_detector_channel_mode"] = max(
+            sorted(set(channels)), key=channels.count
+        )
+        output["duty_detector_channel_agreement"] = float(
+            np.mean(np.asarray(channels) == output["duty_detector_channel_mode"])
+        )
+    else:
+        output["duty_detector_channel_mode"] = None
+        output["duty_detector_channel_agreement"] = None
+    closure = [
+        period.closure_contribution_fraction
+        for row in rows for period in row.burst_periods
+        if period.closure_contribution_fraction is not None
+    ]
+    output["raw_qv_closure_contribution_fraction_median"] = median_or_none(closure)
+    output["raw_qv_closure_contribution_fraction_p95"] = (
+        float(np.percentile(finite(closure), 95)) if len(finite(closure)) else None
+    )
+    return output
 
 
 def moving_block_index_matrix(
@@ -1003,13 +1720,19 @@ def passive_calibration_draws(
     replicates: int,
     block_length: int,
     rng: np.random.Generator,
-) -> tuple[dict[int, np.ndarray], np.ndarray]:
-    """Stratified capture bootstrap for lobe slopes and reactive Ccell."""
-    slope_parts: dict[int, list[np.ndarray]] = {-1: [], 1: []}
+) -> tuple[np.ndarray, np.ndarray]:
+    """Joint stratified bootstrap for the complex passive coefficients."""
     cprime_parts: list[np.ndarray] = []
+    closs_parts: list[np.ndarray] = []
     for level in PASSIVE_FIT_LEVELS:
         rows = sorted(
-            [row for row in observations if row.level_label == str(level)],
+            [
+                row for row in observations
+                if row.level_label == str(level)
+                and row.cstar_raw_F is not None
+                and not row.voltage_clipping_flag
+                and not row.monitor_clipping_flag
+            ],
             key=lambda item: item.record.capture_index,
         )
         if not rows:
@@ -1017,48 +1740,35 @@ def passive_calibration_draws(
         indices = moving_block_index_matrix(len(rows), replicates, block_length, rng)
         cprime_values = np.asarray(
             [
-                calibration.sign * row.cstar_raw_F.real * 1.0e12
-                if row.cstar_raw_F is not None else np.nan
+                (calibration.sign * row.cstar_raw_F).real * 1.0e12
+                for row in rows
+            ],
+            dtype=float,
+        )
+        closs_values = np.asarray(
+            [
+                -(calibration.sign * row.cstar_raw_F).imag * 1.0e12
                 for row in rows
             ],
             dtype=float,
         )
         cprime_parts.append(cprime_values[indices])
-        for polarity in (-1, 1):
-            values = np.asarray(
-                [
-                    file_passive_slope(row, calibration.sign, polarity)
-                    if file_passive_slope(row, calibration.sign, polarity) is not None
-                    else np.nan
-                    for row in rows
-                ],
-                dtype=float,
-            )
-            slope_parts[polarity].append(values[indices])
-
-    slopes: dict[int, np.ndarray] = {}
-    for polarity in (-1, 1):
-        if slope_parts[polarity]:
-            slopes[polarity] = np.nanmedian(
-                np.concatenate(slope_parts[polarity], axis=1), axis=1
-            )
-        else:
-            slopes[polarity] = np.full(
-                replicates,
-                calibration.passive_slopes_nC_per_kV.get(polarity, np.nan),
-            )
+        closs_parts.append(closs_values[indices])
     if cprime_parts:
         cprime = np.nanmedian(np.concatenate(cprime_parts, axis=1), axis=1)
+        closs = np.nanmedian(np.concatenate(closs_parts, axis=1), axis=1)
     else:
         cprime = np.full(replicates, calibration.cprime_pF or np.nan)
-    return slopes, cprime
+        closs = np.full(replicates, calibration.closs_pF or np.nan)
+    return cprime, closs
 
 
 def _file_metric_draws(
     row: FileObservation,
     calibration: CalibrationModel,
     target: str,
-    slope_draws: np.ndarray,
+    cprime_draws: np.ndarray,
+    closs_draws: np.ndarray,
     factor_draws: np.ndarray,
     negative_on_pin_negative: bool,
 ) -> dict[str, np.ndarray]:
@@ -1072,6 +1782,12 @@ def _file_metric_draws(
         [lobe.raw_directed_charge_nC for lobe in lobes], dtype=float
     )
     amplitude = np.asarray([lobe.amplitude_kV for lobe in lobes], dtype=float)
+    reactive_basis = np.asarray(
+        [lobe.background_cprime_basis_nC_per_pF for lobe in lobes], dtype=float
+    )
+    loss_basis = np.asarray(
+        [lobe.background_closs_basis_nC_per_pF for lobe in lobes], dtype=float
+    )
     duration = np.asarray([lobe.duration_s for lobe in lobes], dtype=float)
     selected_indices: list[int] = []
     for burst_index in sorted({lobe.burst_index for lobe in lobes}):
@@ -1081,14 +1797,18 @@ def _file_metric_draws(
         ]
         selected_indices.append(max(candidates, key=lambda index: amplitude[index]))
     selected = np.asarray(selected_indices, dtype=int)
+    background = (
+        cprime_draws[:, None] * reactive_basis[None, :]
+        + closs_draws[:, None] * loss_basis[None, :]
+    )
     peak_charge = factor_draws[:, None] * (
-        raw[selected][None, :] - slope_draws[:, None] * amplitude[selected][None, :]
+        raw[selected][None, :] - background[:, selected]
     )
     peak_rate = peak_charge * 1.0e-9 / (
         ELEMENTARY_CHARGE_C * duration[selected][None, :]
     )
     total = factor_draws * (
-        float(np.sum(raw)) - slope_draws * float(np.sum(amplitude))
+        float(np.sum(raw)) - np.sum(background, axis=1)
     )
     return {
         f"{target}_peak_envelope_halfcycle_p95_nC": np.percentile(
@@ -1113,7 +1833,7 @@ def hierarchical_analysis_draws(
 ) -> tuple[dict[str, np.ndarray], np.ndarray, np.ndarray]:
     """Jointly resample passive calibration captures and legacy MAX captures."""
     replicates = args.bootstrap_replicates
-    slope_draws, cprime_draws = passive_calibration_draws(
+    cprime_draws, closs_draws = passive_calibration_draws(
         calibration_rows,
         calibration,
         replicates,
@@ -1128,6 +1848,17 @@ def hierarchical_analysis_draws(
         factor_draws = np.where(
             denominator > 0.05 * calibration.geometry_cd_pF,
             calibration.geometry_cd_pF / denominator,
+            np.nan,
+        )
+    elif (
+        calibration.factor_source == "provisional_three_level_active_scan"
+        and len(calibration.scan_cd_bootstrap_pF) == replicates
+    ):
+        cd_draws = calibration.scan_cd_bootstrap_pF
+        denominator = cd_draws - cprime_draws
+        factor_draws = np.where(
+            denominator > 0.05 * cd_draws,
+            cd_draws / denominator,
             np.nan,
         )
     elif calibration.geometry_factor is not None:
@@ -1149,7 +1880,8 @@ def hierarchical_analysis_draws(
                 row,
                 calibration,
                 target,
-                slope_draws[polarity],
+                cprime_draws,
+                closs_draws,
                 factor_draws,
                 args.target_negative_on_pin_negative,
             )
@@ -1182,7 +1914,41 @@ def factor_sensitivity_draws(
         size=count,
     )
     charge_scale = cap_scale * gain_scale
-    if (
+    cprime = (
+        np.asarray(cprime_draws, dtype=float)
+        if cprime_draws is not None and len(cprime_draws) == count
+        else np.full(count, calibration.cprime_pF or np.nan)
+    )
+    if calibration.factor_source == "provisional_three_level_active_scan":
+        cd_scan = (
+            calibration.scan_cd_bootstrap_pF
+            if len(calibration.scan_cd_bootstrap_pF) == count
+            else np.full(count, calibration.scan_cd_pF or np.nan)
+        )
+        active_denominator = cd_scan - cprime
+        active_factor = np.where(
+            active_denominator > 0.05 * cd_scan,
+            cd_scan / active_denominator,
+            np.nan,
+        )
+        factor = active_factor.copy()
+        # Keep the full-base Pyrex estimate as a visibly separate model-form
+        # scenario while ensuring the sensitivity envelope includes both the
+        # measured active secant and geometry assumptions.
+        if calibration.geometry_only_factor is not None and calibration.cprime_pF is not None:
+            cd_geometry, _ = geometry_factor_samples(
+                calibration.cprime_pF, args, count, rng
+            )
+            scaled_cprime = charge_scale * cprime
+            geometry_denominator = cd_geometry - scaled_cprime
+            geometry_factor = np.where(
+                geometry_denominator > 0.05 * cd_geometry,
+                cd_geometry / geometry_denominator,
+                np.nan,
+            )
+            use_geometry = np.arange(count) % 2 == 1
+            factor[use_geometry] = geometry_factor[use_geometry]
+    elif (
         calibration.factor_source == "full_base_pyrex_geometry_scenario"
         and calibration.cprime_pF is not None
     ):
@@ -1190,11 +1956,6 @@ def factor_sensitivity_draws(
         # inferred Ccell.  Recompute F for every geometry/scale draw rather
         # than multiplying a nominal-F distribution after the fact.
         cd, _ = geometry_factor_samples(calibration.cprime_pF, args, count, rng)
-        cprime = (
-            np.asarray(cprime_draws, dtype=float)
-            if cprime_draws is not None and len(cprime_draws) == count
-            else np.full(count, calibration.cprime_pF)
-        )
         magnitude_ratio = 1.0
         if (
             calibration.closs_pF is not None
@@ -1244,7 +2005,7 @@ def scan_source_map(
     complete: dict[str, list[Condition]] = defaultdict(list)
     for condition in conditions:
         labels = {row.level_label for row in observations.get(condition, [])}
-        if all(str(level) in labels for level in (*PASSIVE_FIT_LEVELS, *HIGH_FIELD_LEVELS)):
+        if all(str(level) in labels for level in PASSIVE_FIT_LEVELS):
             complete[condition.material].append(condition)
     result: dict[Condition, Condition | None] = {}
     for condition in conditions:
@@ -1303,6 +2064,7 @@ def headline_rows(
                 "scan_source": summary.get("scan_source"),
                 "calibration_transferred": summary.get("scan_transferred"),
                 "evidence_tier": summary.get("evidence_tier"),
+                "passive_background_status": summary.get("passive_background_status"),
                 "carrier_polarity_assignment": summary.get("carrier_polarity_assignment"),
                 "carrier_polarity_assignment_status": summary.get(
                     "carrier_polarity_assignment_status"
@@ -1311,6 +2073,11 @@ def headline_rows(
                 "Ccell_reactive_ci_low_pF": summary.get("Ccell_reactive_ci_low_pF"),
                 "Ccell_reactive_ci_high_pF": summary.get("Ccell_reactive_ci_high_pF"),
                 "Cd_scan_status": summary.get("Cd_scan_status"),
+                "Cd_scan_pF": summary.get("Cd_scan_pF"),
+                "Cd_scan_ci_low_pF": summary.get("Cd_scan_ci_low_pF"),
+                "Cd_scan_ci_high_pF": summary.get("Cd_scan_ci_high_pF"),
+                "Cd_scan_charge_factor_status": summary.get("Cd_scan_charge_factor_status"),
+                "Cd_scan_based_factor_diagnostic": summary.get("Cd_scan_based_factor_diagnostic"),
                 "Cd_geometry_scenario_pF": summary.get("Cd_geometry_scenario_pF"),
                 "charge_correction_factor": summary.get("charge_correction_factor"),
                 "model_sensitivity_draw_valid_fraction": summary.get(
@@ -1320,6 +2087,15 @@ def headline_rows(
                 "retained_charge_ci_low_nC": summary.get("retained_terminal_charge_ci_low_nC"),
                 "retained_charge_ci_high_nC": summary.get("retained_terminal_charge_ci_high_nC"),
                 "retained_charge_status": summary.get("retained_charge_status"),
+                "raw_qv_energy_per_burst_uJ": summary.get("raw_qv_energy_per_burst_uJ"),
+                "raw_qv_energy_per_burst_uJ_ci_low": summary.get("raw_qv_energy_per_burst_uJ_ci_low"),
+                "raw_qv_energy_per_burst_uJ_ci_high": summary.get("raw_qv_energy_per_burst_uJ_ci_high"),
+                "apparent_lissajous_power_mW": summary.get("apparent_lissajous_power_mW"),
+                "apparent_lissajous_power_mW_ci_low": summary.get("apparent_lissajous_power_mW_ci_low"),
+                "apparent_lissajous_power_mW_ci_high": summary.get("apparent_lissajous_power_mW_ci_high"),
+                "detected_activity_on_fraction": summary.get("detected_activity_on_fraction"),
+                "detected_activity_on_fraction_ci_low": summary.get("detected_activity_on_fraction_ci_low"),
+                "detected_activity_on_fraction_ci_high": summary.get("detected_activity_on_fraction_ci_high"),
             }
             statuses: list[str] = []
             for metric_name, prefix in metric_columns.items():
@@ -1375,9 +2151,41 @@ def results_overview_text(rows: Sequence[dict]) -> str:
         "",
         "Each result cell is `estimate [95% joint technical/calibration interval]; model sensitivity range`. The model range is usually the dominant uncertainty.",
         "",
+        "## Raw Q–V energy, apparent reactor power, and detected duty fraction",
+        "",
+        "These electrical quantities do not require the passive-background or Cd model. Power is raw Qm–V loop power for the complete reactor circuit, not plasma-only power.",
+        "",
+        "| Condition | Energy per duty period (µJ) | Apparent power (W) | Detected activity-on fraction |",
+        "|---|---:|---:|---:|",
+    ]
+    seen_conditions: set[str] = set()
+    for row in rows:
+        condition = str(row.get("condition"))
+        if condition in seen_conditions:
+            continue
+        seen_conditions.add(condition)
+        energy = number(row.get("raw_qv_energy_per_burst_uJ"))
+        power_mW = row.get("apparent_lissajous_power_mW")
+        power_W = (
+            float(power_mW) / 1000.0
+            if power_mW is not None and np.isfinite(float(power_mW)) else None
+        )
+        duty = row.get("detected_activity_on_fraction")
+        duty_text = (
+            f"{100.0 * float(duty):.1f}%"
+            if duty is not None and np.isfinite(float(duty)) else "—"
+        )
+        lines.append(
+            f"| {row.get('condition_label') or condition} | {energy} | "
+            f"{number(power_W)} | {duty_text} |"
+        )
+    lines.extend([
+        "",
+        "## Polarity-resolved charge-transfer estimates",
+        "",
         "| Condition | Polarity | Peak half-cycle (nC) | Peak half-cycle-average rate (e s⁻¹) | Whole-record rate (e s⁻¹) | Evidence/status |",
         "|---|---:|---:|---:|---:|---|",
-    ]
+    ])
     for row in rows:
         lines.append(
             "| {condition} | {polarity} | {charge} | {peak} | {record} | {status} |".format(
@@ -1393,6 +2201,8 @@ def results_overview_text(rows: Sequence[dict]) -> str:
         [
             "",
             "Bracketed intervals are 95% joint passive-calibration/MAX-capture moving-block bootstrap intervals. The explicitly displayed model-sensitivity ranges separately include the declared monitor scale, its shared effect on Ccell, a C′-to-|C*| scalar-model bracket, and the full-base Pyrex geometry scenario where used.",
+            "",
+            "Peak aggregation is nested: within each capture and polarity, the maximum-amplitude carrier lobe is selected once per duty burst and its p95 is calculated; the condition estimate is then the median of those capture-level p95 values. Lobes are never pooled across the 64 captures to calculate a single p95.",
             "",
             "A true instantaneous microdischarge peak is not resolved by the existing sampling. Retained surface charge is not inferred from polarity imbalance; it requires quiet pre/post-discharge plateaus.",
             "",
@@ -1615,13 +2425,17 @@ def plot_processing_example(
             s=22,
             zorder=5,
         )
-        slope = calibration.passive_slopes_nC_per_kV.get(
-            example_lobe.voltage_polarity
-        )
-        if slope is not None:
+        excess_value = lobe_terminal_excess_nC(example_lobe, calibration)
+        if excess_value is not None:
             directed = calibration.sign * example_lobe.raw_directed_charge_nC
-            background = float(slope) * example_lobe.amplitude_kV
-            excess = directed - background
+            background = float(
+                passive_background_nC(
+                    example_lobe,
+                    float(calibration.cprime_pF),
+                    float(calibration.closs_pF),
+                )
+            )
+            excess = float(excess_value)
             factor = calibration.geometry_factor or 1.0
             axes[2, 1].text(
                 0.02,
@@ -1748,15 +2562,35 @@ def plot_scan_fit(
         style = "-" if calibration.passive_status.startswith("supported") else "--"
         axes[1].plot(grid, pslope * grid + pintercept, style, color=COLORS["passive"], linewidth=1.5, label=f"40–75% fit ({'accepted' if style == '-' else 'rejected'})")
     high_points = [
-        _level_point_stats(observations, calibration.sign, str(level)) for level in HIGH_FIELD_LEVELS
+        _level_point_stats(observations, calibration.sign, str(level))
+        for level in ACTIVE_CD_LEVELS
     ]
     hx = [row["x"] for row in high_points if row["x"] is not None and row["y"] is not None]
     hy = [row["y"] for row in high_points if row["x"] is not None and row["y"] is not None]
-    if len(hx) == 2 and abs(hx[1] - hx[0]) > 0.02:
-        slope = (hy[1] - hy[0]) / (hx[1] - hx[0])
-        intercept = hy[0] - slope * hx[0]
+    if (
+        len(hx) == 3
+        and calibration.scan_cd_pF is not None
+        and calibration.scan_cd_intercept_nC is not None
+    ):
+        slope = calibration.scan_cd_pF
+        intercept = calibration.scan_cd_intercept_nC
         grid = np.linspace(min(hx), max(hx), 100)
-        axes[1].plot(grid, slope * grid + intercept, "--", color="#b23a48", linewidth=1.5, label="105–115% secant (diagnostic)")
+        accepted = calibration.scan_cd_status.startswith("supported")
+        r2_text = (
+            f"{calibration.scan_cd_r_squared:.3f}"
+            if calibration.scan_cd_r_squared is not None else "n/a"
+        )
+        axes[1].plot(
+            grid,
+            slope * grid + intercept,
+            "-" if accepted else "--",
+            color="#b23a48",
+            linewidth=1.5,
+            label=(
+                "100/105/115% Cd fit "
+                f"({'provisional accepted' if accepted else 'rejected'}; R²={r2_text})"
+            ),
+        )
     axes[0].set_xlabel("Commanded breakdown voltage (%)")
     axes[0].set_ylabel("Measured voltage, Vpp (kV)")
     axes[1].set_xlabel(r"$U(Q_+) - U(Q_-)$ (kV)")
@@ -1780,25 +2614,36 @@ def plot_capacitance_summary(
     output: Path,
     args: argparse.Namespace,
 ) -> None:
-    supported = [condition for condition, model in calibrations.items() if model.passive_status.startswith("supported")]
-    if not supported:
+    conditions = sorted(calibrations)
+    if not conditions:
         return
-    fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.5), sharex=True)
-    condition_colors = plt.cm.tab10(np.linspace(0.0, 0.8, len(supported)))
-    offsets = np.linspace(-1.8, 1.8, len(supported)) if len(supported) > 1 else np.asarray([0.0])
-    for offset, color, condition in zip(offsets, condition_colors, supported):
+    fig, axes = plt.subplots(1, 3, figsize=(14.2, 4.8), sharex=True)
+    condition_colors = plt.cm.tab10(np.linspace(0.0, 0.8, len(conditions)))
+    offsets = (
+        np.linspace(-1.8, 1.8, len(conditions))
+        if len(conditions) > 1 else np.asarray([0.0])
+    )
+    for offset, color, condition in zip(offsets, condition_colors, conditions):
         model = calibrations[condition]
+        accepted = model.passive_status.startswith("supported")
+        marker = "o" if accepted else "x"
         for level in PASSIVE_FIT_LEVELS:
-            values = _level_cstar_values(observations[condition], model.sign, level)
+            level_rows = [
+                row for row in observations[condition]
+                if row.level_label == str(level) and row.cstar_raw_F is not None
+            ]
+            values = [model.sign * row.cstar_raw_F for row in level_rows]
             cprime = np.asarray([value.real * 1.0e12 for value in values])
             closs = np.asarray([-value.imag * 1.0e12 for value in values])
-            for axis, data, label in ((axes[0], cprime, "C'"), (axes[1], closs, "C''")):
+            codes = finite(row.complex_fit_signal_codes for row in level_rows)
+            for axis, data in ((axes[0], cprime), (axes[1], closs), (axes[2], codes)):
                 axis.scatter(
                     np.full(len(data), level + offset),
                     data,
                     s=14,
                     alpha=0.25,
                     color=color,
+                    marker=marker,
                 )
                 if len(data):
                     low, high = np.percentile(data, [2.5, 97.5])
@@ -1806,21 +2651,32 @@ def plot_capacitance_summary(
                         level + offset,
                         np.median(data),
                         yerr=[[np.median(data) - low], [high - np.median(data)]],
-                        fmt="o",
+                        fmt=marker,
                         color=color,
                         capsize=3,
-                        label=display_label(condition) if level == 40 else None,
+                        label=(
+                            f"{display_label(condition)} ({'accepted' if accepted else 'rejected'})"
+                            if level == 40 and axis is axes[0] else None
+                        ),
                     )
-        axes[0].axhline(model.cprime_pF, linestyle="--", color=color, linewidth=1.0, alpha=0.7)
-        axes[1].axhline(model.closs_pF, linestyle="--", color=color, linewidth=1.0, alpha=0.7)
+        if model.cprime_pF is not None:
+            axes[0].axhline(model.cprime_pF, linestyle="--", color=color, linewidth=0.8, alpha=0.55)
+        if model.closs_pF is not None:
+            axes[1].axhline(model.closs_pF, linestyle="--", color=color, linewidth=0.8, alpha=0.55)
     axes[0].set_ylabel("Reactive capacitance, C' (pF)")
     axes[1].set_ylabel("Loss capacitance, C'' (pF)")
+    axes[2].set_ylabel("Passive Channel-D carrier signal (ADC codes p-p)")
+    axes[2].axhline(8.0, color="#b23a48", linestyle="--", linewidth=1.1, label="8-code gate")
     for axis in axes:
         axis.set_xlabel("Breakdown voltage (%)")
         axis.set_xticks(PASSIVE_FIT_LEVELS)
         axis.grid(alpha=0.22)
-        axis.legend(fontsize=8, frameon=False)
-    fig.suptitle("Supported carrier-frequency complex cell capacitance\nPoints are captures; bars are 2.5–97.5% capture intervals")
+    axes[0].legend(fontsize=7, frameon=False)
+    axes[2].legend(fontsize=8, frameon=False)
+    fig.suptitle(
+        "Whole-waveform complex C* fit and passive-signal quantization audit\n"
+        "Points are captures; crosses are rejected conditions; bars are 2.5–97.5% capture intervals"
+    )
     fig.tight_layout(rect=(0, 0, 1, 0.91))
     save_figure(fig, output, args.dpi, not args.no_pdf)
 
@@ -1830,7 +2686,7 @@ def summary_metric_reportable(row: dict, target: str, metric: str) -> bool:
     point = row.get(key)
     low = row.get(f"{key}_analysis_ci_low")
     high = row.get(f"{key}_analysis_ci_high")
-    if not str(row.get("Ccell_status", "")).startswith("supported"):
+    if not str(row.get("passive_background_status", row.get("Ccell_status", ""))).startswith("supported"):
         return False
     if float(row.get("model_sensitivity_draw_valid_fraction") or 0.0) < 0.80:
         return False
@@ -1879,7 +2735,9 @@ def plot_result_forest(
             point = row.get(key)
             low = row.get(f"{key}_analysis_ci_low")
             high = row.get(f"{key}_analysis_ci_high")
-            supported = str(row.get("Ccell_status", "")).startswith("supported")
+            supported = str(
+                row.get("passive_background_status", row.get("Ccell_status", ""))
+            ).startswith("supported")
             reportable = summary_metric_reportable(row, target, metric)
             point_valid = point is not None and np.isfinite(point) and point > 0
             interval_valid = (
@@ -2007,7 +2865,9 @@ def plot_negative_rate_frequency(
             point = row.get(key)
             if point is None or not np.isfinite(point) or point <= 0:
                 continue
-            supported = str(row.get("Ccell_status", "")).startswith("supported")
+            supported = str(
+                row.get("passive_background_status", row.get("Ccell_status", ""))
+            ).startswith("supported")
             reportable = summary_metric_reportable(
                 row, "negative", "record_average_equivalent_flow_per_s"
             )
@@ -2138,10 +2998,14 @@ def flatten_calibration(model: CalibrationModel) -> dict:
     row["material"] = model.condition.material
     row["burst_kHz"] = model.condition.burst_kHz
     row["failed_gates"] = ";".join(model.failed_gates)
+    row["background_failed_gates"] = ";".join(model.background_failed_gates)
+    bootstrap = np.asarray(row.pop("scan_cd_bootstrap_pF", []), dtype=float)
+    row["scan_cd_bootstrap_valid_draws"] = int(np.sum(np.isfinite(bootstrap)))
     for name in ("passive_slopes_nC_per_kV", "passive_slope_mad_nC_per_kV", "passive_threshold_nC"):
         values = row.pop(name)
         for polarity, value in values.items():
-            row[f"{name}_{'negative_voltage' if int(polarity) < 0 else 'positive_voltage'}"] = value
+            prefix = "deprecated_lobe_ratio_" if name != "passive_threshold_nC" else ""
+            row[f"{prefix}{name}_{'negative_voltage' if int(polarity) < 0 else 'positive_voltage'}"] = value
     row.pop("passive_file_slopes", None)
     return row
 
@@ -2166,15 +3030,27 @@ The duty-burst frequency is measured from the waveform activity envelope for
 each capture. Folder frequency is used only if envelope detection falls back to
 the carrier or fails; a >15 % mismatch fails passive-model validation.
 
+The passive response is estimated by projecting every usable sample in each
+40/60/75 %-breakdown waveform onto in-phase and quadrature carrier bases. The
+least-squares model is
+
+`Qm(t) = C' V_I(t) + C'' V_Q(t) + offset + linear drift`.
+
+This whole-waveform complex-C* regression replaces the deprecated lobe-amplitude
+ratio fit, which could lock onto one ADC-code ratio. A passive capture with less
+than eight peak-to-peak Channel-D codes remains explicitly quantization-limited;
+the regression cannot create information absent from the acquisition.
+
 Adjacent interpolated carrier-voltage zero crossings define a half-cycle. For
 voltage polarity `s = ±1`, the directed terminal charge is
 
 `D_h = s [Qm(t1) - Qm(t0)]`.
 
-Separate passive functions for positive and negative voltage lobes are fitted
-from 40/60/75 % data. The operational terminal excess is
+The fitted in-phase and quadrature carrier values are interpolated at both lobe
+endpoints. Their exact endpoint changes give the complex passive prediction
+`B_h(C', C'')`; the operational terminal excess is
 
-`X_h = D_h - B_s(A_h)`.
+`X_h = D_h - B_h(C', C'')`.
 
 The 90 % captures are excluded from that fit and used as an out-of-sample
 passive null. Peak metrics must exceed the larger of the training-residual
@@ -2187,14 +3063,24 @@ When a valid dielectric capacitance is available, the classical model gives
 
 `q_surface,h = [Cd/(Cd-Ccell)] X_h`.
 
-Geometry-derived `Cd` results are explicitly exploratory. The active 105/115 %
-secant is diagnostic because only two independent active amplitudes are
-available; legacy MAX is out-of-sample and is never used to fit `Cd`.
+The effective active-branch `Cd` fit uses the capture medians at 100, 105, and
+115 % breakdown, with an intercept. Captures are resampled within commanded
+level. Use requires unclipped records, at least
+{args.active_cd_min_clean_captures} clean captures per level, resolved activity
+at 100 %, monotonic voltage and charge, `R² ≥ {args.active_cd_min_r_squared:g}`,
+consistent pairwise slopes, and at least 95 % physical bootstrap draws with
+`Cd > 1.05 Ccell`. A passing three-level result is labeled **provisional**, not
+fully validated; a denser active scan or direct dielectric measurement remains
+preferable. Legacy MAX is out-of-sample and is never fitted. The full-base
+Pyrex geometry result is retained as a separate model scenario rather than
+being blended into the statistical confidence interval.
 
 ## Requested outputs
 
-- **Charge per peak half-cycle:** p95 across the maximum-amplitude carrier lobe
-  of each polarity in each duty burst.
+- **Charge per peak half-cycle:** within each capture and polarity, select the
+  maximum-amplitude carrier lobe once per duty burst and calculate p95; report
+  the median of those capture-level p95 values. Lobes from 64 captures are not
+  pooled into one p95.
 - **Peak rate:** p95 of half-cycle-average `q/(e Δt)` across the same
   maximum-amplitude lobe selected once per duty burst. It is not an
   instantaneous nanosecond particle flux.
@@ -2203,6 +3089,23 @@ available; legacy MAX is out-of-sample and is never used to fit `Cd`.
 - **Retained charge:** only measured when stable quiet plateaus exist at both
   record edges. Polarity imbalance is reported separately and never relabeled
   retained surface charge.
+- **Raw Q–V energy and apparent power:** for each complete duty-burst period,
+  `E = 0.5 |Σ V_i (Q_{{i+1}} - Q_{{i-1}})|`, with cyclic indices, kV, and nC,
+  so `E` is in µJ. A capture is represented by its median period energy and
+  `P = f_burst E`; condition intervals resample captures. This is total raw
+  Lissajous reactor input loss (plasma + dielectric + liquid + phase-skew), not
+  plasma-only power.
+- **Detected duty-on fraction:** time fraction above the same envelope threshold
+  `P10 + 0.30(P90-P10)` within the same duty-period windows. The detector channel
+  is audited because current- and voltage-envelope fractions are not identical
+  physical quantities.
+- **Dose clock:** ideal minutes to one negative-charge equivalent per ion are
+  `c_mM V_mL N_A 10^-6 / (60 R_-)`, using a default volume of
+  {args.liquid_volume_ml:g} mL and concentration of
+  {args.metal_ion_concentration_mM:g} mM. It assumes 100 % delivery/utilization,
+  includes electrons plus negative ions, and is not a chemical conversion time.
+  BMIM curves are hypothetical rate-transfer comparisons because BMIM nitrate
+  contains no metal; Mn²⁺ reduction requires at least two equivalents.
 
 Negative rate means a **net external-terminal electrical equivalent** assigned
 to electrons plus negative ions under the configured pin-polarity mapping. It
@@ -2214,16 +3117,18 @@ Area-normalized flux is blank unless an active area is supplied.
 
 The independent sampling unit is a waveform capture, not a carrier half-cycle.
 `repeat_ci` is a conditional MAX-capture repeatability interval with the passive
-calibration fixed. `analysis_ci` jointly resamples 40/60/75 % calibration
-captures within level and legacy MAX captures using a
+calibration fixed. `analysis_ci` jointly resamples 40/60/75 % complex-C*
+calibration captures within level, 100/105/115 % active-Cd captures when that
+model passes, and legacy MAX captures using a
 {args.bootstrap_replicates}-replicate moving-block bootstrap with block length
 {args.bootstrap_block_files}. These are technical-repeat intervals; the 64
 sequential captures are not independent biological or experimental repeats.
 
 Broad model-sensitivity intervals additionally sample the declared monitor
-scale and approximate full-base Pyrex geometry, propagate the common Channel-D
-scale through both terminal charge and Ccell in `Cd/(Cd-Ccell)`, and span the
-scalar-cell choice from `C'` to `|C*|`. These are bounded scenario ranges, not
+scale and keep the measured active-Cd and approximate full-base Pyrex geometry
+as separate sampled scenarios. The common Channel-D scale is propagated through
+both terminal charge and Ccell in `Cd/(Cd-Ccell)`, and the geometry-only branch
+spans the scalar-cell choice from `C'` to `|C*|`. These are bounded scenario ranges, not
 frequentist confidence intervals, and they still do not cover unknown active
 area or every possible circuit-model error. Invalid correction-factor draws
 are counted and the result is not reportable if more than 20 % are unphysical.
@@ -2285,6 +3190,7 @@ def analyze_archive(args: argparse.Namespace) -> dict:
         long_results: list[dict] = []
         per_file_rows: list[dict] = []
         peak_lobe_rows: list[dict] = []
+        burst_period_rows: list[dict] = []
         level_fit_rows: list[dict] = []
         for condition in conditions:
             source = source_map[condition]
@@ -2292,6 +3198,39 @@ def analyze_archive(args: argparse.Namespace) -> dict:
                 [row for row in observations_by_condition[condition] if row.level_label == "MAX"],
                 key=lambda item: item.record.capture_index,
             )
+            electrical = electrical_condition_metrics(
+                max_rows,
+                args.bootstrap_replicates,
+                args.bootstrap_block_files,
+                rng,
+            )
+            for row in max_rows:
+                for period in row.burst_periods:
+                    burst_period_rows.append({
+                        "condition": condition.label,
+                        "material": condition.material,
+                        "burst_kHz": condition.burst_kHz,
+                        "member": row.record.member,
+                        "capture_index": row.record.capture_index,
+                        "period_index": period.burst_index,
+                        "start_s": period.start_s,
+                        "stop_s": period.stop_s,
+                        "midpoint_s": period.midpoint_s,
+                        "signed_raw_qv_energy_uJ": period.signed_energy_uJ,
+                        "raw_qv_energy_uJ": period.energy_uJ,
+                        "apparent_power_using_capture_frequency_mW": (
+                            period.energy_uJ * row.detected_burst_Hz / 1000.0
+                        ),
+                        "detected_activity_on_fraction": period.duty_on_fraction,
+                        "closure_delta_V_kV": period.closure_delta_V_kV,
+                        "closure_delta_Q_nC": period.closure_delta_Q_nC,
+                        "closure_contribution_fraction": period.closure_contribution_fraction,
+                        "detected_burst_Hz": row.detected_burst_Hz,
+                        "detector_method": row.burst_detection_method,
+                        "source_voltage_clipped": row.voltage_clipping_flag,
+                        "monitor_voltage_clipped": row.monitor_clipping_flag,
+                        "power_usable": not row.voltage_clipping_flag and not row.monitor_clipping_flag,
+                    })
             if source is None or source not in calibrations:
                 summaries.append({
                     "condition": condition.label,
@@ -2302,7 +3241,30 @@ def analyze_archive(args: argparse.Namespace) -> dict:
                     "reason": "No same-material complete voltage scan.",
                     "n_max_files": len(max_rows),
                     "quiet_edge_files": sum(row.quiet_edge_change_raw_nC is not None for row in max_rows),
+                    **electrical,
                 })
+                for file_row in max_rows:
+                    per_file_rows.append({
+                        "condition": condition.label,
+                        "material": condition.material,
+                        "burst_kHz": condition.burst_kHz,
+                        "member": file_row.record.member,
+                        "capture_index": file_row.record.capture_index,
+                        "carrier_Hz": file_row.carrier_Hz,
+                        "detected_burst_Hz": file_row.detected_burst_Hz,
+                        "burst_detection_method": file_row.burst_detection_method,
+                        "burst_frequency_relative_error": file_row.burst_frequency_relative_error,
+                        "voltage_pp_kV": file_row.voltage_pp_kV,
+                        "raw_qv_energy_per_burst_uJ": file_row.burst_energy_median_uJ,
+                        "burst_energy_median_uJ": file_row.burst_energy_median_uJ,
+                        "apparent_lissajous_power_mW": file_row.apparent_power_mW,
+                        "detected_activity_on_fraction": file_row.duty_on_fraction,
+                        "duty_on_fraction": file_row.duty_on_fraction,
+                        "duty_envelope_contrast": file_row.duty_envelope_contrast,
+                        "source_voltage_clipped": file_row.voltage_clipping_flag,
+                        "current_clipped": file_row.current_clipping_flag,
+                        "monitor_voltage_clipped": file_row.monitor_clipping_flag,
+                    })
                 continue
             calibration = calibrations[source]
             transferred = source != condition
@@ -2325,8 +3287,7 @@ def analyze_archive(args: argparse.Namespace) -> dict:
                 )
                 for row in max_rows
             ]
-            file_metric_pairs = [(row, metrics) for row, metrics in file_metric_pairs if metrics]
-            file_metrics = [metrics for _, metrics in file_metric_pairs]
+            file_metrics = [metrics for _, metrics in file_metric_pairs if metrics]
             point, intervals, bootstrap_draws = aggregate_with_ci(
                 file_metrics,
                 args.bootstrap_replicates,
@@ -2343,11 +3304,14 @@ def analyze_archive(args: argparse.Namespace) -> dict:
             evidence = calibration.evidence_tier
             reasons = list(calibration.failed_gates)
             if transferred:
-                evidence = (
-                    "exploratory_transferred_model"
-                    if calibration.passive_status.startswith("supported") and central_factor != 1.0
-                    else "diagnostic_transferred_background"
-                )
+                if calibration.background_status.startswith("supported"):
+                    evidence = (
+                        "exploratory_transferred_model"
+                        if central_factor != 1.0
+                        else "background_subtracted_transferred_across_frequency"
+                    )
+                else:
+                    evidence = "diagnostic_transferred_background"
                 reasons.append("calibration_transferred_across_burst_frequency")
             sensitivity_factor = factor_sensitivity_draws(
                 calibration,
@@ -2383,6 +3347,8 @@ def analyze_archive(args: argparse.Namespace) -> dict:
                     else "positive_pin_voltage_assumed_negative_carrier_delivery"
                 ),
                 "carrier_polarity_assignment_status": "explicit_physical_assumption_not_validated_by_channel_D_sign_lock",
+                "passive_background_status": calibration.background_status,
+                "passive_background_failed_gates": ";".join(calibration.background_failed_gates),
                 "Ccell_status": calibration.passive_status,
                 "Ccell_reactive_pF": calibration.cprime_pF,
                 "Ccell_reactive_ci_low_pF": calibration.cprime_ci_low_pF,
@@ -2392,6 +3358,17 @@ def analyze_archive(args: argparse.Namespace) -> dict:
                 "Ccell_loss_ci_high_pF": calibration.closs_ci_high_pF,
                 "Cd_scan_status": calibration.scan_cd_status,
                 "Cd_scan_pF": calibration.scan_cd_pF,
+                "Cd_scan_ci_low_pF": calibration.scan_cd_ci_low_pF,
+                "Cd_scan_ci_high_pF": calibration.scan_cd_ci_high_pF,
+                "Cd_scan_intercept_nC": calibration.scan_cd_intercept_nC,
+                "Cd_scan_r_squared": calibration.scan_cd_r_squared,
+                "Cd_scan_pairwise_relative_span": calibration.scan_cd_pairwise_relative_span,
+                "Cd_scan_breakdown_active_fraction": calibration.scan_cd_breakdown_active_fraction,
+                "Cd_scan_clean_counts": calibration.scan_cd_clean_counts,
+                "Cd_scan_charge_factor_status": calibration.scan_cd_charge_factor_status,
+                "Cd_scan_based_factor_diagnostic": calibration.scan_based_factor_diagnostic,
+                "Cd_scan_based_factor_diagnostic_low": calibration.scan_based_factor_diagnostic_low,
+                "Cd_scan_based_factor_diagnostic_high": calibration.scan_based_factor_diagnostic_high,
                 "Cd_geometry_scenario_pF": calibration.geometry_cd_pF,
                 "Cd_geometry_scenario_low_pF": (
                     geometry_cd_pF(
@@ -2412,6 +3389,9 @@ def analyze_archive(args: argparse.Namespace) -> dict:
                 "charge_correction_factor": central_factor,
                 "charge_correction_factor_low": calibration.geometry_factor_low,
                 "charge_correction_factor_high": calibration.geometry_factor_high,
+                "geometry_only_charge_correction_factor": calibration.geometry_only_factor,
+                "geometry_only_charge_correction_factor_low": calibration.geometry_only_factor_low,
+                "geometry_only_charge_correction_factor_high": calibration.geometry_only_factor_high,
                 "hierarchical_factor_draw_valid_fraction": float(
                     np.mean(np.isfinite(calibration_factor_draws))
                 ),
@@ -2423,6 +3403,7 @@ def analyze_archive(args: argparse.Namespace) -> dict:
                 "retained_charge_status": "not_measured_no_quiet_record_edges",
                 "quiet_edge_files": sum(row.quiet_edge_change_raw_nC is not None for row in max_rows),
                 "transport_imbalance_is_not_retained_charge": True,
+                **electrical,
             }
             for key, value in holdout_limits.items():
                 summary[f"{key}_passive_90_holdout_p95"] = value
@@ -2480,7 +3461,7 @@ def analyze_archive(args: argparse.Namespace) -> dict:
                     repeat_low = summary.get(f"{key}_repeat_ci_low")
                     analysis_low = summary.get(f"{key}_analysis_ci_low")
                     analysis_high = summary.get(f"{key}_analysis_ci_high")
-                    passive_supported = calibration.passive_status.startswith("supported")
+                    passive_supported = calibration.background_status.startswith("supported")
                     resolution = 0.0
                     if metric_name == "peak_halfcycle_charge_nC":
                         resolution = max(
@@ -2538,6 +3519,8 @@ def analyze_archive(args: argparse.Namespace) -> dict:
                         "repeat_ci_high": summary.get(f"{key}_repeat_ci_high") if reportable else None,
                         "analysis_ci_low": analysis_low if reportable else None,
                         "analysis_ci_high": analysis_high if reportable else None,
+                        "diagnostic_analysis_ci_low": analysis_low,
+                        "diagnostic_analysis_ci_high": analysis_high,
                         "passive_resolution_threshold": resolution,
                         "passive_resolution_basis": (
                             "maximum_of_training_residual_and_out_of_sample_90_percent_statistic"
@@ -2552,9 +3535,9 @@ def analyze_archive(args: argparse.Namespace) -> dict:
                         "unit": "nC" if "charge" in metric_name else "elementary_charge_equivalents_per_s",
                         "evidence_tier": metric_status,
                         "definition": (
-                            "p95 across maximum-amplitude carrier half-cycles selected once per duty burst"
+                            "within-capture p95 across maximum-amplitude carrier half-cycles selected once per duty burst, then median of capture-level p95 values across captures"
                             if metric_name == "peak_halfcycle_charge_nC" else
-                            "p95 half-cycle-average net charge-equivalent rate across the same maximum-amplitude lobe selected once per duty burst; not instantaneous flux"
+                            "within-capture p95 half-cycle-average net charge-equivalent rate across the same maximum-amplitude lobes, then median of capture-level p95 values; not instantaneous flux"
                             if metric_name == "peak_halfcycle_average_flow_per_s" else
                             "signed background-subtracted sum divided by full record duration"
                             if metric_name == "whole_record_average_flow_per_s" else
@@ -2573,6 +3556,8 @@ def analyze_archive(args: argparse.Namespace) -> dict:
             for file_row, metrics in file_metric_pairs:
                 per_file_rows.append({
                     "condition": condition.label,
+                    "material": condition.material,
+                    "burst_kHz": condition.burst_kHz,
                     "member": file_row.record.member,
                     "capture_index": file_row.record.capture_index,
                     "carrier_Hz": file_row.carrier_Hz,
@@ -2584,6 +3569,17 @@ def analyze_archive(args: argparse.Namespace) -> dict:
                     "file_sign_vote": file_row.sign_vote,
                     "sign_vote_disagrees": file_row.sign_vote is not None and file_row.sign_vote != calibration.sign,
                     "charge_lsb_nC": file_row.charge_lsb_nC,
+                    "complex_fit_residual_rms_nC": file_row.complex_fit_residual_rms_nC,
+                    "complex_fit_signal_codes": file_row.complex_fit_signal_codes,
+                    "raw_qv_energy_per_burst_uJ": file_row.burst_energy_median_uJ,
+                    "burst_energy_median_uJ": file_row.burst_energy_median_uJ,
+                    "apparent_lissajous_power_mW": file_row.apparent_power_mW,
+                    "detected_activity_on_fraction": file_row.duty_on_fraction,
+                    "duty_on_fraction": file_row.duty_on_fraction,
+                    "duty_envelope_contrast": file_row.duty_envelope_contrast,
+                    "source_voltage_clipped": file_row.voltage_clipping_flag,
+                    "current_clipped": file_row.current_clipping_flag,
+                    "monitor_voltage_clipped": file_row.monitor_clipping_flag,
                     **metrics,
                 })
                 peak_lobe_rows.extend(
@@ -2596,13 +3592,61 @@ def analyze_archive(args: argparse.Namespace) -> dict:
                 )
             summaries.append(summary)
 
+        level_fit_rows = [
+            {
+                "condition": source.label,
+                "material": source.material,
+                "burst_kHz": source.burst_kHz,
+                "level": level,
+                **_level_point_stats(
+                    observations_by_condition[source],
+                    calibration.sign,
+                    str(level),
+                ),
+            }
+            for source, calibration in calibrations.items()
+            for level in LEVELS
+        ]
+        dose_response_binned = build_capture_balanced_binned(
+            peak_lobe_rows,
+            x_key="amplitude_kV",
+            bins=12,
+            replicates=args.bootstrap_replicates,
+            block_length=args.bootstrap_block_files,
+            seed=args.random_seed + 41,
+        )
+        stationarity_binned = build_capture_balanced_binned(
+            peak_lobe_rows,
+            x_key="midpoint_s",
+            bins=12,
+            replicates=args.bootstrap_replicates,
+            block_length=args.bootstrap_block_files,
+            seed=args.random_seed + 43,
+        )
+        stationarity_rows = build_stationarity_metrics(
+            peak_lobe_rows,
+            replicates=args.bootstrap_replicates,
+            block_length=args.bootstrap_block_files,
+            seed=args.random_seed + 47,
+        )
+        dose_clock_rows = build_dose_clock_rows(
+            long_results,
+            volume_ml=args.liquid_volume_ml,
+            concentration_mM=args.metal_ion_concentration_mM,
+            equivalents_per_ion=args.dose_electrons_per_metal_ion,
+        )
+
         if not args.no_plots:
             plot_coverage(manifest, selected_members, figures / "01_data_coverage", args)
             for source, calibration in calibrations.items():
                 source_rows = observations_by_condition[source]
                 plot_qv_grid(source, source_rows, calibration, qv_dir / f"{source.label}_qv_traces", args)
-                level_fit_rows.extend(
-                    plot_scan_fit(source, source_rows, calibration, scan_dir / f"{source.label}_breakdown_fit", args)
+                plot_scan_fit(
+                    source,
+                    source_rows,
+                    calibration,
+                    scan_dir / f"{source.label}_breakdown_fit",
+                    args,
                 )
             for condition in conditions:
                 source = source_map[condition]
@@ -2675,6 +3719,43 @@ def analyze_archive(args: argparse.Namespace) -> dict:
                 args,
             )
             plot_retained_status(summaries, figures / "06_retained_charge_availability", args)
+            supplementary_save = lambda fig, base, _args: save_figure(
+                fig, base, args.dpi, not args.no_pdf
+            )
+            plot_power_audit(
+                summaries,
+                per_file_rows,
+                figures / "07_apparent_discharge_power",
+                supplementary_save,
+                args,
+            )
+            plot_duty_audit(
+                summaries,
+                per_file_rows,
+                figures / "08_duty_on_fraction_audit",
+                supplementary_save,
+                args,
+            )
+            plot_binned_facet(
+                peak_lobe_rows,
+                figures / "09_per_lobe_dose_response",
+                supplementary_save,
+                args,
+                "dose_response",
+            )
+            plot_binned_facet(
+                peak_lobe_rows,
+                figures / "10_within_record_stationarity",
+                supplementary_save,
+                args,
+                "stationarity",
+            )
+            plot_dose_clock(
+                dose_clock_rows,
+                figures / "11_negative_charge_equivalent_dose_clock",
+                supplementary_save,
+                args,
+            )
 
         manifest_rows = [
             {
@@ -2688,11 +3769,31 @@ def analyze_archive(args: argparse.Namespace) -> dict:
             for record in manifest
         ]
         headline = headline_rows(summaries, long_results)
+        electrical_condition_rows = [
+            {
+                key: value for key, value in summary.items()
+                if key in {"condition", "condition_label", "material", "burst_kHz", "n_max_files"}
+                or key.startswith((
+                    "raw_qv_",
+                    "apparent_lissajous_power_",
+                    "detected_activity_",
+                    "duty_",
+                    "burst_energy_",
+                ))
+            }
+            for summary in summaries
+        ]
         write_csv(output / "headline_results.csv", headline)
         write_csv(output / "supervisor_summary.csv", summaries)
+        write_csv(output / "electrical_condition_metrics.csv", electrical_condition_rows)
         write_csv(output / "long_form_results.csv", long_results)
         write_csv(output / "per_file_maximum_metrics.csv", per_file_rows)
         write_csv(output / "peak_halfcycle_observations.csv", peak_lobe_rows)
+        write_csv(output / "burst_period_observations.csv", burst_period_rows)
+        write_csv(output / "dose_response_binned.csv", dose_response_binned)
+        write_csv(output / "stationarity_binned.csv", stationarity_binned)
+        write_csv(output / "stationarity_metrics.csv", stationarity_rows)
+        write_csv(output / "dose_clock_results.csv", dose_clock_rows)
         write_csv(output / "capacitance_and_fit_results.csv", [flatten_calibration(model) for model in calibrations.values()])
         write_csv(output / "breakdown_level_fit_points.csv", level_fit_rows)
         write_csv(output / "archive_manifest.csv", manifest_rows)
@@ -2702,14 +3803,19 @@ def analyze_archive(args: argparse.Namespace) -> dict:
         (output / "METHODS_AND_LIMITATIONS.md").write_text(methodology_text(args), encoding="utf-8")
         captions = """# Figure captions
 
-1. **Data coverage.** Number of separate waveform captures selected at each commanded percentage of breakdown voltage. Captures are sequential technical repeats, not independently rebuilt experiments. Legacy MAX data were acquired in a separate session.
-2. **Complex cell capacitance.** Capture-level reactive and loss capacitances from 40/60/75 % data. Only conditions passing passive orientation and amplitude-stability gates are shown.
-3. **Peak half-cycle charge.** Peak-envelope p95 net charge. Thin bars jointly resample passive-calibration and MAX captures; broad bars are declared geometry/monitor-scale/model-form sensitivity, not statistical confidence intervals. Open markers transfer a same-material calibration across duty-burst frequency; gray crosses have a rejected passive background and are diagnostic only.
-4. **Peak rate.** P95 half-cycle-average net charge-equivalent rate across the same peak-envelope lobes. This is not a nanosecond-resolved particle-flux maximum.
-5. **Whole-record rate.** Signed background-subtracted charge divided by the full 10 ms record and elementary charge. The frequency panel distinguishes independently scanned, transferred, and rejected conditions.
-6. **Retained-charge availability.** Persistent retained charge requires stationary quiet monitor plateaus at both record edges; DC coupling also remains to be verified. Charge imbalance is not substituted when this criterion fails.
-7. **Q–V scan supplements.** Faint lines are independent captures; the bold line is the median-amplitude capture. Slope guides are descriptive. Rejected models remain visibly labeled.
-8. **Breakdown fits.** Small points are captures; large points and bars show the capture distribution. Passive fits use 40/60/75 %. Transition levels 90/100 % are excluded. The 105/115 % line is a diagnostic two-level secant. Legacy MAX is an open out-of-sample star and is never fitted.
+1. **Signal-processing example.** Full acquisition and two-carrier-cycle zoom showing the source voltage, sign-audited Pearson diagnostic, Channel-D charge, detected lobe boundaries, complex-C* passive endpoint prediction, and model factor.
+2. **Data coverage.** Number of separate waveform captures selected at each commanded percentage of breakdown voltage. Captures are sequential technical repeats, not independently rebuilt experiments. Legacy MAX data were acquired in a separate session.
+3. **Complex cell capacitance.** Capture-level reactive and loss capacitances from whole-waveform in-phase/quadrature fits to 40/60/75 % data. Only conditions passing the empirical background, quantization, orientation, and stability gates are shown.
+4. **Peak half-cycle charge.** Within each capture, p95 is calculated across the maximum-amplitude lobe selected once per duty burst; markers are medians of capture-level p95 values. Thin intervals jointly resample passive calibration, active Cd where supported, and MAX captures. Broad intervals are model scenarios, not confidence intervals.
+5. **Peak rate.** The same nested aggregation applied to half-cycle-average net charge-equivalent rate. This is not a nanosecond-resolved particle-flux maximum.
+6. **Whole-record rate and frequency audit.** Signed background-subtracted charge divided by the full record duration and elementary charge. Independently scanned, transferred, and rejected conditions remain visibly distinct.
+7. **Retained-charge availability.** Persistent retained charge requires stationary quiet monitor plateaus at both record edges; DC coupling also remains to be verified. Charge imbalance is not substituted.
+8. **Q–V scan supplements.** Faint lines are independent captures; the bold line is the median-amplitude capture. Slope guides are descriptive. Rejected models remain labeled.
+9. **Breakdown fits.** Small points are captures; large points and bars show capture distributions. The effective Cd regression uses capture medians at 100/105/115 %, an intercept, and predefined activity/monotonicity/R²/pairwise/physical gates. A passing result is provisional. Legacy MAX is out-of-sample and never fitted.
+10. **Apparent discharge power.** Per-period raw Qm–V cyclic shoelace area is reduced to a capture median, then to a condition median with capture-block bootstrap intervals. Power is `f_burst E`. It includes plasma, dielectric, liquid, and phase-skew losses and is not plasma-only power.
+11. **Duty-on audit.** Fraction of each detected duty-burst period above `P10 + 0.30(P90-P10)` using the same activity envelope and period windows as lobe and power segmentation. Bars are condition medians; points are captures.
+12. **Per-lobe dose response and stationarity.** Charge is first reduced to a median within amplitude/time bin and capture, then aggregated across captures. Faint points are a deterministic raw-lobe subsample. Empty amplitude bins are not connected. The stationarity table additionally reports first-to-last-quintile drift.
+13. **Dose clock.** Ideal minutes to one negative-charge equivalent per ion versus volume at 5 mM; the 2.5 mL reactor is marked. BMIM is a hypothetical electrical-rate transfer, negative charge includes electrons and negative ions, dotted curves use non-reportable diagnostic rates, and Mn²⁺ full reduction requires at least two equivalents.
 
 All carrier labels use an explicit physical assignment: negative pin-voltage lobes are treated as negative-carrier delivery. Channel-D sign locking does not independently validate this species/polarity mapping.
 """
@@ -2723,6 +3829,9 @@ All carrier labels use an explicit physical assignment: negative pin-voltage lob
             "bootstrap_replicates": args.bootstrap_replicates,
             "bootstrap_block_files": args.bootstrap_block_files,
             "random_seed": args.random_seed,
+            "liquid_volume_ml": args.liquid_volume_ml,
+            "metal_ion_concentration_mM": args.metal_ion_concentration_mM,
+            "dose_electrons_per_metal_ion": args.dose_electrons_per_metal_ion,
             "calibrations": {condition.label: flatten_calibration(model) for condition, model in calibrations.items()},
         }
         (output / "analysis_audit.json").write_text(json.dumps(audit, indent=2), encoding="utf-8")
