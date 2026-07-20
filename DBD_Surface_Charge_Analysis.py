@@ -339,10 +339,17 @@ def carrier_analytic_voltage(
     time_s: np.ndarray,
     voltage_V: np.ndarray,
     carrier_Hz: float,
-    low_ratio: float = 0.35,
-    high_ratio: float = 1.65,
+    low_ratio: float = 0.90,
+    high_ratio: float = 1.10,
 ) -> np.ndarray:
-    """Return a band-limited analytic carrier including its duty envelope."""
+    """Return a narrow-band analytic carrier centred on the carrier line.
+
+    The band is deliberately narrow: the ground-return transfer function has a
+    series resonance just above the carrier (measured: C' swings to +61 pF at
+    140 kHz and negative beyond 160 kHz), so any wide-band fit averages across
+    a sign flip and collapses C'.  A narrow unmasked projection equals the
+    carrier-line ratio Q(fc)/V(fc), with ~1e3 carrier cycles of processing
+    gain against ADC quantization."""
     count = len(time_s)
     if count < 8 or carrier_Hz <= 0:
         return np.zeros(count, dtype=complex)
@@ -404,12 +411,12 @@ def complex_capacitance_least_squares(
     residual_rms_nC = float(
         np.sqrt(np.mean((charge_C[mask] - prediction) ** 2)) * NC_PER_C
     )
-    carrier_prediction = (
-        coefficients[0] * analytic.real[mask]
-        + coefficients[1] * analytic.imag[mask]
-    )
+    # Signal metric: raw monitor-charge swing, not the narrow-band prediction.
+    # The narrow carrier-line estimator has large processing gain, so the
+    # meaningful "is there signal" measure is the raw swing against the ADC
+    # step, evaluated on the same samples the fit used.
     signal_pp_nC = float(
-        (np.percentile(carrier_prediction, 99) - np.percentile(carrier_prediction, 1))
+        (np.percentile(charge_C[mask], 99) - np.percentile(charge_C[mask], 1))
         * NC_PER_C
     )
     return (
@@ -1148,7 +1155,12 @@ def build_calibration(
             row for row in passive_rows
             if row.level_label == str(level) and row.cstar_raw_F is not None
         ]
-        values = [sign * row.cstar_raw_F for row in level_rows]
+        qualified = [
+            row for row in level_rows
+            if (row.complex_fit_signal_codes or 0.0) >= 8.0
+        ]
+        rows_for_cstar = qualified if qualified else level_rows
+        values = [sign * row.cstar_raw_F for row in rows_for_cstar]
         level_cprime = [value.real * 1.0e12 for value in values]
         level_closs = [-value.imag * 1.0e12 for value in values]
         cprime_by_level.append(median_or_none(level_cprime) or np.nan)
@@ -1230,8 +1242,14 @@ def build_calibration(
     if available_fraction < 0.75:
         background_failed.append("complex_fit_available_for_fewer_than_75_percent_passive_captures")
     signal_codes = median_or_none(row.complex_fit_signal_codes for row in passive_rows)
-    if signal_codes is None or signal_codes < 8.0:
-        background_failed.append("passive_monitor_signal_below_8_ADC_codes")
+    qualifying = [
+        row for row in passive_rows
+        if (row.complex_fit_signal_codes or 0.0) >= 8.0
+    ]
+    if len(qualifying) < 8:
+        background_failed.append(
+            "fewer_than_8_passive_captures_with_carrier_signal_at_or_above_8_ADC_codes"
+        )
     burst_error = median_or_none(row.burst_frequency_relative_error for row in passive_rows)
     if burst_error is None or burst_error > 0.15:
         background_failed.append("detected_burst_frequency_disagrees_with_condition_label")
