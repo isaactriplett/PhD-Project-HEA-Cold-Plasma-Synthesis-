@@ -1,0 +1,233 @@
+{
+  "_format_note": "This file is JSON-compatible YAML so the analysis has no mandatory YAML-parser dependency.",
+  "analysis": {
+    "version": "2.1.0-lissajous-v2.1",
+    "random_seed": 20260722,
+    "percentile_low": 2.5,
+    "percentile_high": 97.5,
+    "r3_relative_tolerance": 0.10,
+    "minimum_codes": 30,
+    "minimum_carrier_hz": 1000.0,
+    "maximum_carrier_hz": 300000.0,
+    "frequency_crosscheck_tolerance": 0.03,
+    "lf_geometric_max_hz": 20000.0,
+    "carrier_transfer_min_hz": 60000.0,
+    "transition_band_policy": "conservatively_tag_as_carrier-transfer",
+    "detrend_fraction_threshold": 0.10,
+    "strict_orientation": false,
+    "prefer_archives": true,
+    "multiline_minimum_hz": 4000.0,
+    "multiline_maximum_hz": 175000.0,
+    "multiline_max_points_per_capture": 48,
+    "multiline_relative_voltage_threshold": 0.02,
+    "multiline_plot_min_N": 3,
+    "carrier_estimator": {
+      "channel": "applied_voltage",
+      "gate_on_period": true,
+      "method": "on-period gated, harmonic-aware interpolated FFT with modal rising-zero-cross diagnostic",
+      "f0_vs_half_line_amplitude_ratio": 0.20,
+      "crosscheck_policy": "report relative disagreement magnitude; do not reject solely on the binary 3% threshold"
+    },
+    "duty_detector": {
+      "channel": "applied_voltage",
+      "rectification": "absolute deviation from record median",
+      "smoothing": "centered moving mean",
+      "smoothing_cycles": 1.5,
+      "envelope_percentiles": [10, 90],
+      "threshold_rule": "p10 + 0.30*(p90-p10)",
+      "threshold_fraction": 0.30,
+      "minimum_contrast": 0.12,
+      "convention": "drive-gate / ring-down-inclusive while the smoothed voltage envelope remains above threshold; the same active mask defines duty and burst-period energy boundaries",
+      "minimum_on_cycles": 2.0
+    },
+    "tv_lowpass_maximum_harmonic": 3.0,
+    "baseline_quiet_harmonic_ratio_max": 0.25
+  },
+  "paths": {
+    "data_root": "C:/Users/isaac/OneDrive/Documents/McGill/McGill Experiments/waveforms/July 2026",
+    "default_output": "outputs/lissajous_v2"
+  },
+  "calibration": {
+    "channel_a_divider": {
+      "value": 1000.0,
+      "relative_uncertainty": 0.03,
+      "confirmed": false,
+      "marker": "*",
+      "provenance": "Assumption carried from v1.2; PicoScope export is treated as unscaled probe output."
+    },
+    "measuring_capacitor_F": {
+      "value": 1.0e-7,
+      "relative_uncertainty": 0.05,
+      "confirmed": false,
+      "marker": "*",
+      "provenance": "Nominal 100 nF WIMA measuring capacitor; as-built part and topology remain unconfirmed."
+    },
+    "same_band_charge_factor": {
+      "value": 1.15,
+      "relative_uncertainty": 0.0,
+      "confirmed": true,
+      "marker": "",
+      "band": "carrier-transfer",
+      "provenance": "v1.1 same-band Cd/(Cd-Ccell) ratio; used only for carrier-band charge correction."
+    },
+    "channel_roles": {
+      "time": ["Time"],
+      "applied_voltage": ["Channel A"],
+      "legacy_current": ["Channel C"],
+      "charge_monitor": ["Channel D"]
+    }
+  },
+  "medium_labels": {
+    "argon": {
+      "display": "Argon / no liquid",
+      "composition": "argon discharge; no liquid present",
+      "confirmed": true,
+      "provenance": "Source folder `Lissajouswaveformsdifferentmediums/argon` and the user-provided experimental condition list identify the no-liquid argon control; exact argon fill and geometry remain a separate open item."
+    },
+    "pure water": {
+      "display": "Pure water",
+      "composition": "pure water",
+      "confirmed": true,
+      "provenance": "Source folder `Lissajouswaveformsdifferentmediums/pure water` and the user-provided experimental condition list."
+    },
+    "ionic liquid": {
+      "display": "ionic liquid (BMIM*)",
+      "composition": "BMIM assignment unconfirmed; nitrate counter-ion unconfirmed",
+      "confirmed": false,
+      "provenance": "The source folder is only `Lissajouswaveformsdifferentmediums/ionic liquid`; the BMIM assignment was carried by the v1.1 report but is not documented by the source tree and awaits Isaac's confirmation."
+    },
+    "manganese nitrate in water": {
+      "display": "Mn nitrate (5 mM)",
+      "composition": "5 mM manganese nitrate in water",
+      "confirmed": true,
+      "provenance": "User-confirmed experimental composition; the v1.1 record also encodes `5mM_Mn_nitrate_in_water` and `metal_ion_concentration_mM = 5.0` in `dbd_surface_charge_report/analysis_audit.json`."
+    }
+  },
+  "chain_model": {
+    "status": "order-of-magnitude estimate only",
+    "marker": "\u2020",
+    "C_true_F": 2.7e-12,
+    "C_true_range_F": [2.0e-12, 3.4e-12],
+    "L_H": 0.36,
+    "L_range_H": [0.30, 0.50],
+    "R_ohm": 10000.0,
+    "R_range_ohm": [7000.0, 15000.0],
+    "f_res_Hz": 161500.0,
+    "f_res_range_Hz": [159000.0, 164000.0],
+    "plot_frequency_range_Hz": [4000.0, 170000.0],
+    "provenance": "v1.2 three-element series-chain fit; poor real-admittance residuals mean this is an order-of-magnitude fit only."
+  },
+  "legacy_dispersion_points": [
+    {
+      "frequency_kHz": 128.0,
+      "Cmag_pF": 27.85,
+      "medium": "BMIM_nitrate",
+      "source_type": "v1.1_carrier",
+      "band_tag": "carrier-transfer",
+      "provenance": "v1.1 operational carrier-line value; measurement-chain transfer, not geometry."
+    },
+    {
+      "frequency_kHz": 128.0,
+      "Cmag_pF": 23.09,
+      "medium": "5mM_Mn_nitrate_in_water",
+      "source_type": "v1.1_carrier",
+      "band_tag": "carrier-transfer",
+      "provenance": "v1.1 operational carrier-line value; measurement-chain transfer, not geometry."
+    },
+    {
+      "frequency_kHz": 128.0,
+      "Cmag_pF": 212.6,
+      "medium": "BMIM_nitrate",
+      "source_type": "v1.1_active_Cd",
+      "band_tag": "carrier-transfer",
+      "provenance": "v1.1 provisional active three-level secant; shown only as transfer-context evidence."
+    },
+    {
+      "frequency_kHz": 128.0,
+      "Cmag_pF": 201.0,
+      "medium": "BMIM_nitrate",
+      "source_type": "v1.1_active_secant",
+      "band_tag": "carrier-transfer",
+      "provenance": "v1.1 active secant scenario; shown only as transfer-context evidence."
+    },
+    {
+      "frequency_kHz": 140.0,
+      "Cmag_pF": 61.7,
+      "medium": "dry_fixture",
+      "source_type": "v1.2_dry_fixture",
+      "band_tag": "carrier-transfer",
+      "provenance": "v1.2 dry-fixture observation supporting measurement-chain attribution."
+    }
+  ],
+  "reactor": {
+    "liquid_volume_mL": 2.5,
+    "confirmed": true,
+    "provenance": "User-confirmed reactor volume."
+  },
+  "known_duplicate_paths": {
+    "Lissajouswaveformsdifferentmediums/argon/argon 20kHz.csv": {
+      "canonical_path": "Lissajouswaveformsdifferentmediums/argon/Lissajousfigure1 20 kHz/Lissajousfigure1_03.csv",
+      "provenance": "Byte-identical duplicate confirmed during the July-tree inventory; kept in manifest but excluded from aggregation."
+    }
+  },
+  "synthesis_runs": {
+    "7_9/BMIMNTf2Pt20kHz": {
+      "label": "BMIM-NTf2 + Pt",
+      "metal_inventory_mol": null,
+      "electron_stoichiometry_z": null,
+      "confirmed": false,
+      "marker": "*"
+    },
+    "7_18/AgPd 5percent hydrogen": {
+      "label": "Ag-Pd, Ar/5% H2",
+      "metal_inventory_mol": null,
+      "electron_stoichiometry_z": null,
+      "confirmed": false,
+      "marker": "*"
+    },
+    "7_19/1_3betaineEGPdHydrogen": {
+      "label": "1:3 betaine:EG Pd/H2, run 1",
+      "metal_inventory_mol": null,
+      "electron_stoichiometry_z": null,
+      "confirmed": false,
+      "marker": "*"
+    },
+    "7_19/1_3betaineEGPdHydrogen-0002": {
+      "label": "1:3 betaine:EG Pd/H2, run 2",
+      "metal_inventory_mol": null,
+      "electron_stoichiometry_z": null,
+      "confirmed": false,
+      "marker": "*"
+    },
+    "7_19/1_3betaineEGAgCuNi-0003": {
+      "label": "1:3 betaine:EG Ag-Cu-Ni",
+      "metal_inventory_mol": null,
+      "electron_stoichiometry_z": null,
+      "confirmed": false,
+      "marker": "*"
+    },
+    "7_19/1_3betaineEGCuNi-0004": {
+      "label": "1:3 betaine:EG Cu-Ni",
+      "metal_inventory_mol": null,
+      "electron_stoichiometry_z": null,
+      "confirmed": false,
+      "marker": "*"
+    },
+    "7_21/AgCuNi1_6betaine_12PD": {
+      "label": "Ag-Cu-Ni, 1:6 betaine:1,2-PD",
+      "metal_inventory_mol": null,
+      "electron_stoichiometry_z": null,
+      "confirmed": false,
+      "marker": "*"
+    }
+  },
+  "open_items": [
+    "C_m as-built part, measured value, tolerance, Channel-D topology, and protection hardware*",
+    "Channel-A divider/export scaling as built*",
+    "Probe-tip placement and monitor ground-return topology timing relative to acquisitions*",
+    "Argon condition composition and exact fill/geometry*",
+    "Per-run metal inventories and electron stoichiometries*",
+    "Nominal breakdown voltage behind each percentage label*",
+    "Whether any intended 4/10/20 kHz acquisition is a true continuous low-frequency excitation rather than a burst label*"
+  ]
+}

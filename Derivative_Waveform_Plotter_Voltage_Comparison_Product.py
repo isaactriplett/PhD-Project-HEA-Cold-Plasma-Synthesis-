@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Read the CSV file, skipping the first row (units)
-df = pd.read_csv(r"C:\Users\isaac\OneDrive\Documents\McGill\McGill Experiments\waveforms\March 2026\3_23\ionic liquid metal salt dbd\4kHz1_42.csv", skiprows=1)
+df = pd.read_csv(r"C:\Users\isaac\OneDrive\Documents\McGill\McGill Experiments\waveforms\March 2026\3_21\tests (no il)\20khzattempt1\20khzattempt1_52.csv", skiprows=1)
 
 # Rename columns for clarity
 df.columns = ['Time (ms)', 'Voltage (V)', 'Current (mA)']
@@ -59,7 +59,7 @@ plt.ylabel('product of dV/dt and current')
 plt.title('Product of Current and First Derivative of Voltage')
 plt.grid(True)
 
-plt.xlim(0.00015,0.0002)
+plt.xlim(0.000,0.0003)
 
 plt.show()
 

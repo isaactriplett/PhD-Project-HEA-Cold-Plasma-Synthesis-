@@ -1,0 +1,10 @@
+﻿__pycache__/
+.pytest_cache/
+*.pyc
+
+# Generated analysis outputs (figures, tables, logs) - regenerable from code
+outputs/
+
+# Scratch and unapplied patches
+*.patch
+replot_fig02.py

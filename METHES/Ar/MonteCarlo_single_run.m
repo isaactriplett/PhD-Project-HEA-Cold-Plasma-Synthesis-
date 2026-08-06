@@ -50,7 +50,7 @@ Temp = 300;
 % start electron number
 N0 = 1e4;
 % maximum allowed electron number
-Ne_max = 1e7;
+Ne_max = 1e6;
 % energy sharing factor in interval [0,1]
 W = 0.5;
 % energy vector
